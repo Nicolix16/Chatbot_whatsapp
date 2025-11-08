@@ -1,9 +1,12 @@
+import * as dotenv from 'dotenv';
+
 import { join } from 'path'
 import { createBot, createProvider, createFlow, addKeyword, utils } from '@builderbot/bot'
 import { MemoryDB as Database } from '@builderbot/bot'
 import { MetaProvider as Provider } from '@builderbot/provider-meta'
 
-const PORT = process.env.PORT ?? 3008
+dotenv.config()
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3008
 
 const discordFlow = addKeyword<Provider, Database>('doc').addAnswer(
     ['You can see the documentation here', '📄 https://builderbot.app/docs \n', 'Do you want to continue? *yes*'].join(
@@ -61,10 +64,10 @@ const fullSamplesFlow = addKeyword<Provider, Database>(['samples', utils.setEven
 const main = async () => {
     const adapterFlow = createFlow([welcomeFlow, registerFlow, fullSamplesFlow])
     const adapterProvider = createProvider(Provider, {
-        jwtToken: 'jwtToken',
-        numberId: 'numberId',
-        verifyToken: 'verifyToken',
-        version: 'v18.0'
+        jwtToken: process.env.JWT_TOKEN,
+        numberId: process.env.NUMBER_ID,
+        verifyToken: process.env.VERIFY_TOKEN,
+        version: process.env.PROVIDER_VERSION
     })
     const adapterDB = new Database()
 
