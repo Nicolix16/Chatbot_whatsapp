@@ -42,3 +42,30 @@ If you want to discover all the functions and features offered by the library yo
 ## Contact Us
 - [💻 Discord](https://link.codigoencasa.com/DISCORD)
 - [👌 𝕏 (Twitter)](https://twitter.com/leifermendez)
+
+## How to test the Pedido button
+
+1) Create your `.env` file with your WhatsApp Cloud API credentials:
+
+```
+JWT_TOKEN=your_token
+NUMBER_ID=1234567890
+VERIFY_TOKEN=your_verify_token
+PROVIDER_VERSION=v21.0
+PORT=3008
+```
+
+2) Build and run locally:
+
+```
+npm run build
+npm start
+```
+
+3) In WhatsApp, start the chat. You’ll see a welcome message with buttons. Tap "🛒 Pedido".
+
+Expected:
+- The bot logs a line similar to: `[flow] Pedido triggered by <phone> -> text: "🛒 Pedido"` in the console.
+- You’ll receive a new message asking for your tipo de cliente with the buttons: "🏠 Hogar", "💼 Negocios", "📍 Encuéntranos - Almacenes Avellano", y "Volver al menú principal".
+
+If the button text varies (upper/lowercase or emoji), the flow also accepts "Pedido" and "pedido" as triggers.
