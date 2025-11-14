@@ -6,19 +6,26 @@
   "type": "module",
   "scripts": {
     "start": "node ./dist/app.js --env-file=.env",
+    "start:dashboard": "node ./dist/server.js --env-file=.env",
     "lint": "eslint . --no-ignore",
     "dev": "npm run lint && nodemon ./src/app.ts --env-file=.env",
-    "build": "npx rollup -c"
+    "build": "npx rollup -c",
+    "build:server": "npx tsc src/server.ts --outDir dist --module es2020 --target es2020 --moduleResolution node --esModuleInterop"
   },
   "keywords": [],
   "dependencies": {
     "@builderbot/bot": "1.3.2-y.0",
     "@builderbot/database-mongo": "^1.3.5",
     "@builderbot/provider-meta": "1.3.2-y.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.19.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
     "@types/node": "^20.11.30",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.4.0",

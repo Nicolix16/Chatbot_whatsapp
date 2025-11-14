@@ -292,7 +292,7 @@ const capturarDatosNegocioFlow = addKeyword<Provider, Database>(EVENTS.WELCOME)
     console.log('🔍 ctx.body:', ctx.body)
     
     // Solo procesar si estamos esperando datos del negocio
-    if (!myState.esperandoDatosNegocio) {
+    if (!myState || !myState.esperandoDatosNegocio) {
       console.log('⏭️ No estamos esperando datos, saliendo...')
       return
     }

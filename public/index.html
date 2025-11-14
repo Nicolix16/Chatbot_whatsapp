@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Avellano Chatbot</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐔 Dashboard Avellano</h1>
+            <p class="subtitle">Panel de Control del Chatbot de WhatsApp</p>
+            <button class="refresh-btn" onclick="loadAll()">🔄 Actualizar Datos</button>
+        </header>
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number" id="totalClientes">-</div>
+                <div class="stat-label">Total Clientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏠</div>
+                <div class="stat-number" id="clientesHogar">-</div>
+                <div class="stat-label">Clientes Hogar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💼</div>
+                <div class="stat-number" id="clientesNegocio">-</div>
+                <div class="stat-label">Clientes Negocios</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-number" id="clientesHoy">-</div>
+                <div class="stat-label">Registros Hoy</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('clientes')">👥 Clientes</button>
+            <button class="tab-button" onclick="switchTab('pedidos')">📋 Pedidos</button>
+            <button class="tab-button" onclick="switchTab('conversaciones')">💬 Conversaciones</button>
+        </div>
+
+        <!-- Tab Clientes -->
+        <div id="clientes-tab" class="tab-content active">
+            <h2>👥 Lista de Clientes</h2>
+            <div id="clientes-content" class="loading">Cargando...</div>
+        </div>
+
+        <!-- Tab Pedidos -->
+        <div id="pedidos-tab" class="tab-content">
+            <h2>📋 Lista de Pedidos</h2>
+            <div id="pedidos-content" class="loading">Cargando...</div>
+        </div>
+
+        <!-- Tab Conversaciones -->
+        <div id="conversaciones-tab" class="tab-content">
+            <h2>💬 Historial de Conversaciones</h2>
+            <div id="conversaciones-content" class="loading">Cargando...</div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar script con cache busting
+        const script = document.createElement('script');
+        script.src = 'app.js?v=' + Date.now();
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
