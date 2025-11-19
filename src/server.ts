@@ -42,6 +42,16 @@ mongoose.connect(MONGO_URI)
   })
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret'
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret'
+
+// Funciones para generar tokens
+function generateAccessToken(payload: any) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' })
+}
+
+function generateRefreshToken(payload: any) {
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' })
+}
 
 // ========== ENDPOINTS DE LA API ==========
 // Endpoint registro (solo mientras creas usuarios; luego puedes deshabilitarlo)
@@ -68,10 +78,77 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user) return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
     const ok = await bcrypt.compare(password, user.passwordHash)
     if (!ok) return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
-    const token = jwt.sign({ uid: user._id, email: user.email }, JWT_SECRET, { expiresIn: '8h' })
-    res.json({ success: true, token })
+    
+    const payload = { uid: user._id, email: user.email }
+    const accessToken = generateAccessToken(payload)
+    const refreshToken = generateRefreshToken(payload)
+    
+    // Guardar refresh token en BD
+    user.refreshToken = refreshToken
+    await user.save()
+    
+    res.json({ 
+      success: true, 
+      accessToken,
+      refreshToken
+    })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Error en login' })
+  }
+})
+
+// Endpoint para renovar access token usando refresh token
+app.post('/api/auth/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body
+    if (!refreshToken) return res.status(401).json({ success: false, error: 'Refresh token requerido' })
+    
+    // Verificar refresh token
+    const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as any
+    
+    // Verificar que el token existe en BD
+    const user = await Usuario.findById(payload.uid)
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ success: false, error: 'Refresh token inválido' })
+    }
+    
+    // Generar nuevos tokens
+    const newPayload = { uid: user._id, email: user.email }
+    const newAccessToken = generateAccessToken(newPayload)
+    const newRefreshToken = generateRefreshToken(newPayload)
+    
+    // Actualizar refresh token en BD
+    user.refreshToken = newRefreshToken
+    await user.save()
+    
+    res.json({ 
+      success: true, 
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
+    })
+  } catch (e) {
+    return res.status(401).json({ success: false, error: 'Refresh token inválido o expirado' })
+  }
+})
+
+// Endpoint para logout: invalidar refresh token
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    const auth = req.headers.authorization || ''
+    const [, token] = auth.split(' ')
+    
+    if (token) {
+      const payload = jwt.verify(token, JWT_SECRET) as any
+      const user = await Usuario.findById(payload.uid)
+      if (user) {
+        user.refreshToken = undefined
+        await user.save()
+      }
+    }
+    
+    res.json({ success: true })
+  } catch (e) {
+    res.json({ success: true })
   }
 })
 

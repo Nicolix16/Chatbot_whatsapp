@@ -1,11 +1,63 @@
 const API_URL = 'http://localhost:3009/api'
+
+// Función para renovar el access token usando el refresh token
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refresh_token')
+  if (!refreshToken) {
+    window.location.href = '/login.html'
+    return null
+  }
+  
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    })
+    const json = await res.json()
+    
+    if (json.success) {
+      localStorage.setItem('access_token', json.accessToken)
+      localStorage.setItem('refresh_token', json.refreshToken)
+      return json.accessToken
+    } else {
+      localStorage.clear()
+      window.location.href = '/login.html'
+      return null
+    }
+  } catch (e) {
+    localStorage.clear()
+    window.location.href = '/login.html'
+    return null
+  }
+}
+
 function authHeader(){
-  const t = localStorage.getItem('dash_token')
+  const t = localStorage.getItem('access_token')
   return t ? { Authorization: `Bearer ${t}` } : {}
 }
+
+// Función para hacer fetch con auto-refresh si el token expiró
+async function fetchWithAuth(url, options = {}) {
+  options.headers = { ...options.headers, ...authHeader() }
+  
+  let res = await fetch(url, options)
+  
+  // Si el token expiró (401), renovar y reintentar
+  if (res.status === 401) {
+    const newToken = await refreshAccessToken()
+    if (newToken) {
+      options.headers.Authorization = `Bearer ${newToken}`
+      res = await fetch(url, options)
+    }
+  }
+  
+  return res
+}
+
 async function loadStats() {
   try {
-    const response = await fetch(`${API_URL}/stats`, { headers: authHeader() })
+    const response = await fetchWithAuth(`${API_URL}/stats`)
     const result = await response.json();
     
     if (result.success) {
@@ -22,7 +74,7 @@ async function loadStats() {
 // Cargar clientes
 async function loadClientes() {
     try {
-        const response = await fetch(`${API_URL}/clientes?t=${Date.now()}`, { headers: authHeader() }); // Cache busting
+        const response = await fetchWithAuth(`${API_URL}/clientes?t=${Date.now()}`); // Cache busting
         const result = await response.json();
         
         console.log('📊 Clientes cargados:', result.data); // Debug
@@ -85,7 +137,7 @@ async function loadClientes() {
 // Cargar pedidos
 async function loadPedidos() {
     try {
-        const response = await fetch(`${API_URL}/pedidos?t=${Date.now()}`, { headers: authHeader() }); // Cache busting
+        const response = await fetchWithAuth(`${API_URL}/pedidos?t=${Date.now()}`); // Cache busting
         const result = await response.json();
         
         const container = document.getElementById('pedidos-content');
@@ -133,7 +185,7 @@ async function loadPedidos() {
 // Cargar conversaciones
 async function loadConversaciones() {
     try {
-        const response = await fetch(`${API_URL}/conversaciones?t=${Date.now()}`, { headers: authHeader() }); // Cache busting
+        const response = await fetchWithAuth(`${API_URL}/conversaciones?t=${Date.now()}`); // Cache busting
         const result = await response.json();
         
         const container = document.getElementById('conversaciones-content');

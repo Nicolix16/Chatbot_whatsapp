@@ -12,8 +12,12 @@ async function login(){
     })
     const json = await res.json()
     if(!json.success) return err.textContent = json.error || 'Error'
-    localStorage.setItem('dash_token', json.token)
-    window.location.href = `/?token=${encodeURIComponent(json.token)}`
+    
+    // Guardar ambos tokens
+    localStorage.setItem('access_token', json.accessToken)
+    localStorage.setItem('refresh_token', json.refreshToken)
+    
+    window.location.href = `/?token=${encodeURIComponent(json.accessToken)}`
   } catch(e){
     err.textContent = 'Error de red'
   }
