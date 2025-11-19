@@ -9,9 +9,20 @@
 <body>
     <div class="container">
         <header>
-            <h1>🐔 Dashboard Avellano</h1>
-            <p class="subtitle">Panel de Control del Chatbot de WhatsApp</p>
-            <button class="refresh-btn" onclick="loadAll()">🔄 Actualizar Datos</button>
+            <div class="header-content">
+                <div>
+                    <h1>🐔 Dashboard Avellano</h1>
+                    <p class="subtitle">Panel de Control del Chatbot de WhatsApp</p>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info" id="user-info">
+                        <span class="user-name" id="user-name">-</span>
+                        <span class="user-rol-badge" id="user-rol-badge">-</span>
+                    </div>
+                    <button class="refresh-btn" onclick="loadAll()">🔄 Actualizar</button>
+                    <button class="logout-btn" onclick="logout()">🚪 Salir</button>
+                </div>
+            </div>
         </header>
 
         <!-- Estadísticas -->
@@ -41,8 +52,9 @@
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab('clientes')">👥 Clientes</button>
-            <button class="tab-button" onclick="switchTab('pedidos')">📋 Pedidos</button>
-            <button class="tab-button" onclick="switchTab('conversaciones')">💬 Conversaciones</button>
+            <button class="tab-button" id="tab-pedidos" onclick="switchTab('pedidos')">📋 Pedidos</button>
+            <button class="tab-button" id="tab-conversaciones" onclick="switchTab('conversaciones')">💬 Conversaciones</button>
+            <button class="tab-button" id="tab-usuarios" onclick="switchTab('usuarios')" style="display:none">⚙️ Usuarios</button>
         </div>
 
         <!-- Tab Clientes -->
@@ -61,6 +73,12 @@
         <div id="conversaciones-tab" class="tab-content">
             <h2>💬 Historial de Conversaciones</h2>
             <div id="conversaciones-content" class="loading">Cargando...</div>
+        </div>
+
+        <!-- Tab Usuarios (Solo Admin) -->
+        <div id="usuarios-tab" class="tab-content">
+            <h2>⚙️ Gestión de Usuarios</h2>
+            <div id="usuarios-content" class="loading">Cargando...</div>
         </div>
     </div>
 

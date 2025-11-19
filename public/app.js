@@ -1,5 +1,49 @@
 const API_URL = 'http://localhost:3009/api'
 
+// Obtener datos del usuario desde localStorage
+function getUserData() {
+  const data = localStorage.getItem('user_data')
+  return data ? JSON.parse(data) : null
+}
+
+// Verificar permisos por rol
+function hasRole(...roles) {
+  const user = getUserData()
+  return user && roles.includes(user.rol)
+}
+
+// Inicializar UI según rol del usuario
+function initializeRoleBasedUI() {
+  const user = getUserData()
+  if (!user) {
+    window.location.href = '/login.html'
+    return
+  }
+  
+  // Mostrar nombre y rol del usuario
+  document.getElementById('user-name').textContent = user.nombre || user.email
+  const rolBadge = document.getElementById('user-rol-badge')
+  rolBadge.textContent = user.rol.toUpperCase()
+  rolBadge.className = `user-rol-badge rol-${user.rol}`
+  
+  // Ocultar tabs según rol
+  const isVisitante = user.rol === 'visitante'
+  const isAdmin = user.rol === 'administrador'
+  
+  // Visitantes no ven Pedidos ni Conversaciones
+  if (isVisitante) {
+    document.getElementById('tab-pedidos').style.display = 'none'
+    document.getElementById('tab-conversaciones').style.display = 'none'
+  }
+  
+  // Solo admin ve gestión de usuarios
+  if (isAdmin) {
+    document.getElementById('tab-usuarios').style.display = 'inline-block'
+  }
+  
+  console.log(`👤 Usuario: ${user.nombre} - Rol: ${user.rol}`)
+}
+
 // Función para renovar el access token usando el refresh token
 async function refreshAccessToken() {
   const refreshToken = localStorage.getItem('refresh_token')
@@ -74,51 +118,78 @@ async function loadStats() {
 // Cargar clientes
 async function loadClientes() {
     try {
-        const response = await fetchWithAuth(`${API_URL}/clientes?t=${Date.now()}`); // Cache busting
+        const response = await fetchWithAuth(`${API_URL}/clientes?t=${Date.now()}`);
         const result = await response.json();
         
-        console.log('📊 Clientes cargados:', result.data); // Debug
+        console.log('📊 Clientes cargados:', result.data);
         
         const container = document.getElementById('clientes-content');
+        const user = getUserData()
+        const isVisitante = user && user.rol === 'visitante'
         
         if (result.success && result.data.length > 0) {
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Teléfono</th>
-                            <th>Tipo</th>
-                            <th>Información del Cliente</th>
-                            <th>Fecha Registro</th>
-                            <th>Conversaciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${result.data.map(cliente => {
-                            // Parsear la información del cliente
-                            let info = '-';
-                            if (cliente.productosInteres) {
-                                const lines = cliente.productosInteres.split('\n').map(l => l.trim()).filter(l => l);
-                                if (lines.length >= 4) {
-                                    info = `Negocio: ${lines[0]} | Ciudad: ${lines[1]} | Contacto: ${lines[2]} | Productos: ${lines[3]}`;
-                                } else {
-                                    info = cliente.productosInteres.replace(/\n/g, ' | ');
-                                }
-                            }
-                            
-                            return `
+            // Visitantes ven una tabla simplificada sin datos sensibles
+            if (isVisitante) {
+                container.innerHTML = `
+                    <div class="info-message">ℹ️ Como visitante, solo puedes ver estadísticas básicas.</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Fecha Registro</th>
+                                <th>Conversaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.data.map(cliente => `
                                 <tr>
-                                    <td>${cliente.telefono}</td>
                                     <td><span class="badge badge-${cliente.tipoCliente}">${cliente.tipoCliente.toUpperCase()}</span></td>
-                                    <td style="max-width: 400px; white-space: normal;">${info}</td>
                                     <td>${new Date(cliente.fechaRegistro).toLocaleDateString('es-CO')}</td>
                                     <td>${cliente.conversaciones}</td>
                                 </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                // Admin y operarios ven todos los datos
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Teléfono</th>
+                                <th>Tipo</th>
+                                <th>Información del Cliente</th>
+                                <th>Fecha Registro</th>
+                                <th>Conversaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.data.map(cliente => {
+                                let info = '-';
+                                if (cliente.productosInteres) {
+                                    const lines = cliente.productosInteres.split('\n').map(l => l.trim()).filter(l => l);
+                                    if (lines.length >= 4) {
+                                        info = `Negocio: ${lines[0]} | Ciudad: ${lines[1]} | Contacto: ${lines[2]} | Productos: ${lines[3]}`;
+                                    } else {
+                                        info = cliente.productosInteres.replace(/\n/g, ' | ');
+                                    }
+                                }
+                                
+                                return `
+                                    <tr>
+                                        <td>${cliente.telefono || '-'}</td>
+                                        <td><span class="badge badge-${cliente.tipoCliente}">${cliente.tipoCliente.toUpperCase()}</span></td>
+                                        <td style="max-width: 400px; white-space: normal;">${info}</td>
+                                        <td>${new Date(cliente.fechaRegistro).toLocaleDateString('es-CO')}</td>
+                                        <td>${cliente.conversaciones}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
         } else {
             container.innerHTML = `
                 <div class="empty-state">
@@ -185,7 +256,7 @@ async function loadPedidos() {
 // Cargar conversaciones
 async function loadConversaciones() {
     try {
-        const response = await fetchWithAuth(`${API_URL}/conversaciones?t=${Date.now()}`); // Cache busting
+        const response = await fetchWithAuth(`${API_URL}/conversaciones?t=${Date.now()}`);
         const result = await response.json();
         
         const container = document.getElementById('conversaciones-content');
@@ -228,6 +299,103 @@ async function loadConversaciones() {
     }
 }
 
+// Cargar usuarios (solo admin)
+async function loadUsuarios() {
+    if (!hasRole('administrador')) return
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/usuarios?t=${Date.now()}`);
+        const result = await response.json();
+        
+        const container = document.getElementById('usuarios-content');
+        
+        if (result.success && result.data.length > 0) {
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.data.map(user => `
+                            <tr>
+                                <td>${user.nombre || '-'}</td>
+                                <td>${user.email}</td>
+                                <td><span class="badge rol-${user.rol}">${user.rol.toUpperCase()}</span></td>
+                                <td><span class="badge ${user.activo ? 'badge-success' : 'badge-danger'}">${user.activo ? 'Activo' : 'Inactivo'}</span></td>
+                                <td>${new Date(user.createdAt).toLocaleDateString('es-CO')}</td>
+                                <td>
+                                    <button class="btn-small" onclick="toggleUserStatus('${user._id}', ${!user.activo})">
+                                        ${user.activo ? '🚫 Desactivar' : '✅ Activar'}
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">👤</div>
+                    <p>No hay usuarios registrados</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error cargando usuarios:', error);
+        document.getElementById('usuarios-content').innerHTML = 
+            '<div class="empty-state"><p>Error cargando usuarios</p></div>';
+    }
+}
+
+// Activar/Desactivar usuario (solo admin)
+async function toggleUserStatus(userId, newStatus) {
+    if (!hasRole('administrador')) return
+    
+    if (!confirm(`¿Estás seguro de ${newStatus ? 'activar' : 'desactivar'} este usuario?`)) {
+        return
+    }
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/usuarios/${userId}/estado`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activo: newStatus })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            loadUsuarios()
+        } else {
+            alert('Error: ' + (result.error || 'No se pudo actualizar el usuario'))
+        }
+    } catch (error) {
+        console.error('Error actualizando usuario:', error);
+        alert('Error de conexión')
+    }
+}
+
+// Función de logout
+async function logout() {
+    try {
+        await fetchWithAuth(`${API_URL}/auth/logout`, {
+            method: 'POST'
+        });
+    } catch (e) {
+        console.error('Error en logout:', e);
+    }
+    
+    localStorage.clear();
+    window.location.href = '/login.html';
+}
+
 // Cambiar entre tabs
 function switchTab(tabName) {
     // Ocultar todos los tabs
@@ -241,6 +409,11 @@ function switchTab(tabName) {
     // Mostrar tab seleccionado
     document.getElementById(`${tabName}-tab`).classList.add('active');
     event.target.classList.add('active');
+    
+    // Cargar datos del tab si es usuarios
+    if (tabName === 'usuarios') {
+        loadUsuarios();
+    }
 }
 
 // Cargar todo
@@ -248,11 +421,16 @@ function loadAll() {
     console.log('🔄 Actualizando datos...', new Date().toLocaleTimeString());
     loadStats();
     loadClientes();
-    loadPedidos();
-    loadConversaciones();
+    
+    // Solo cargar si el usuario tiene permisos
+    if (hasRole('administrador', 'operario')) {
+        loadPedidos();
+        loadConversaciones();
+    }
 }
 
-// Cargar datos al iniciar
+// Inicializar al cargar
+initializeRoleBasedUI();
 loadAll();
 
 // Auto-refresh cada 30 segundos

@@ -9,6 +9,7 @@ import Conversacion from './models/Conversacion.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import Usuario from './models/Usuario.js'
+import { verificarToken, soloAdmin, adminOOperario, AuthRequest } from './middleware/auth.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -54,17 +55,46 @@ function generateRefreshToken(payload: any) {
 }
 
 // ========== ENDPOINTS DE LA API ==========
-// Endpoint registro (solo mientras creas usuarios; luego puedes deshabilitarlo)
+// ========== ENDPOINTS DE AUTENTICACIÓN ==========
+// Endpoint registro
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password } = req.body
-    if (!email || !password) return res.status(400).json({ success: false, error: 'Email y password requeridos' })
+    const { email, password, rol, nombre } = req.body
+    
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email y password requeridos' })
+    }
+    
+    // Validar rol
+    const rolesValidos = ['administrador', 'operario', 'visitante']
+    if (rol && !rolesValidos.includes(rol)) {
+      return res.status(400).json({ success: false, error: 'Rol inválido' })
+    }
+    
     const existe = await Usuario.findOne({ email })
-    if (existe) return res.status(409).json({ success: false, error: 'Usuario ya existe' })
+    if (existe) {
+      return res.status(409).json({ success: false, error: 'Usuario ya existe' })
+    }
+    
     const passwordHash = await bcrypt.hash(password, 10)
-    const user = new Usuario({ email, passwordHash })
+    const user = new Usuario({ 
+      email, 
+      passwordHash,
+      rol: rol || 'visitante',
+      nombre: nombre || email.split('@')[0],
+      activo: true
+    })
     await user.save()
-    res.json({ success: true, data: { id: user._id, email: user.email } })
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        id: user._id, 
+        email: user.email, 
+        rol: user.rol,
+        nombre: user.nombre 
+      } 
+    })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Error registrando usuario' })
   }
@@ -73,24 +103,45 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    if (!email || !password) return res.status(400).json({ success: false, error: 'Email y password requeridos' })
-    const user = await Usuario.findOne({ email })
-    if (!user) return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
-    const ok = await bcrypt.compare(password, user.passwordHash)
-    if (!ok) return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email y password requeridos' })
+    }
     
-    const payload = { uid: user._id, email: user.email }
+    const user = await Usuario.findOne({ email })
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
+    }
+    
+    if (!user.activo) {
+      return res.status(401).json({ success: false, error: 'Usuario desactivado' })
+    }
+    
+    const ok = await bcrypt.compare(password, user.passwordHash)
+    if (!ok) {
+      return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
+    }
+    
+    const payload = { 
+      uid: user._id, 
+      email: user.email, 
+      rol: user.rol,
+      nombre: user.nombre 
+    }
     const accessToken = generateAccessToken(payload)
     const refreshToken = generateRefreshToken(payload)
     
-    // Guardar refresh token en BD
     user.refreshToken = refreshToken
     await user.save()
     
     res.json({ 
       success: true, 
       accessToken,
-      refreshToken
+      refreshToken,
+      user: {
+        email: user.email,
+        rol: user.rol,
+        nombre: user.nombre
+      }
     })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Error en login' })
@@ -108,12 +159,17 @@ app.post('/api/auth/refresh', async (req, res) => {
     
     // Verificar que el token existe en BD
     const user = await Usuario.findById(payload.uid)
-    if (!user || user.refreshToken !== refreshToken) {
+    if (!user || user.refreshToken !== refreshToken || !user.activo) {
       return res.status(401).json({ success: false, error: 'Refresh token inválido' })
     }
     
     // Generar nuevos tokens
-    const newPayload = { uid: user._id, email: user.email }
+    const newPayload = { 
+      uid: user._id, 
+      email: user.email, 
+      rol: user.rol,
+      nombre: user.nombre 
+    }
     const newAccessToken = generateAccessToken(newPayload)
     const newRefreshToken = generateRefreshToken(newPayload)
     
@@ -152,20 +208,96 @@ app.post('/api/auth/logout', async (req, res) => {
   }
 })
 
-// Middleware protección (después de rutas auth)
-app.use('/api', (req, res, next) => {
-  if (req.path.startsWith('/auth')) return next()
-  const auth = req.headers.authorization || ''
-  const [, token] = auth.split(' ')
-  if (!token) return res.status(401).json({ success: false, error: 'Token requerido' })
+// ========== ENDPOINTS PROTEGIDOS ==========
+
+// Endpoint para obtener info del usuario actual
+app.get('/api/auth/me', verificarToken, async (req: AuthRequest, res) => {
   try {
-    const payload = jwt.verify(token, JWT_SECRET)
-    ;(req as any).user = payload
-    return next()
-  } catch {
-    return res.status(401).json({ success: false, error: 'Token inválido' })
+    const user = await Usuario.findById(req.user!.uid).select('-passwordHash -refreshToken')
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    res.json({ success: true, data: user })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Error obteniendo usuario' })
   }
 })
+
+// ========== GESTIÓN DE USUARIOS (Solo Admin) ==========
+
+// Listar todos los usuarios (solo admin)
+app.get('/api/usuarios', verificarToken, soloAdmin, async (req: AuthRequest, res) => {
+  try {
+    const usuarios = await Usuario.find().select('-passwordHash -refreshToken').sort({ createdAt: -1 })
+    res.json({ success: true, data: usuarios })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Error obteniendo usuarios' })
+  }
+})
+
+// Actualizar rol de usuario (solo admin)
+app.patch('/api/usuarios/:id/rol', verificarToken, soloAdmin, async (req: AuthRequest, res) => {
+  try {
+    const { rol } = req.body
+    const rolesValidos = ['administrador', 'operario', 'visitante']
+    
+    if (!rolesValidos.includes(rol)) {
+      return res.status(400).json({ success: false, error: 'Rol inválido' })
+    }
+    
+    const user = await Usuario.findByIdAndUpdate(
+      req.params.id,
+      { rol, updatedAt: new Date() },
+      { new: true }
+    ).select('-passwordHash -refreshToken')
+    
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    
+    res.json({ success: true, data: user })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Error actualizando rol' })
+  }
+})
+
+// Activar/Desactivar usuario (solo admin)
+app.patch('/api/usuarios/:id/estado', verificarToken, soloAdmin, async (req: AuthRequest, res) => {
+  try {
+    const { activo } = req.body
+    
+    const user = await Usuario.findByIdAndUpdate(
+      req.params.id,
+      { activo, updatedAt: new Date() },
+      { new: true }
+    ).select('-passwordHash -refreshToken')
+    
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    
+    res.json({ success: true, data: user })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Error actualizando estado' })
+  }
+})
+
+// Eliminar usuario (solo admin)
+app.delete('/api/usuarios/:id', verificarToken, soloAdmin, async (req: AuthRequest, res) => {
+  try {
+    const user = await Usuario.findByIdAndDelete(req.params.id)
+    
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    
+    res.json({ success: true, message: 'Usuario eliminado' })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Error eliminando usuario' })
+  }
+})
+
+// ========== ENDPOINTS DE DATOS ==========
 
 // Ruta dashboard protegida (debe ir ANTES de servir estáticos)
 app.get('/', (req, res) => {
@@ -180,10 +312,21 @@ app.get('/', (req, res) => {
   }
 })
 
-// 📊 Obtener todos los clientes (protegidos por JWT)
-app.get('/api/clientes', async (req, res) => {
+// 📊 Clientes - Todos pueden ver, pero con diferentes niveles de detalle
+app.get('/api/clientes', verificarToken, async (req: AuthRequest, res) => {
   try {
     const clientes = await Cliente.find().sort({ fechaRegistro: -1 })
+    
+    // Visitantes solo ven datos básicos
+    if (req.user!.rol === 'visitante') {
+      const clientesBasicos = clientes.map(c => ({
+        tipoCliente: c.tipoCliente,
+        fechaRegistro: c.fechaRegistro,
+        conversaciones: c.conversaciones
+      }))
+      return res.json({ success: true, total: clientesBasicos.length, data: clientesBasicos })
+    }
+    
     res.json({
       success: true,
       total: clientes.length,
@@ -197,8 +340,8 @@ app.get('/api/clientes', async (req, res) => {
   }
 })
 
-// 🔍 Obtener un cliente por teléfono
-app.get('/api/clientes/:telefono', async (req, res) => {
+// 🔍 Obtener un cliente por teléfono (solo admin y operario)
+app.get('/api/clientes/:telefono', verificarToken, adminOOperario, async (req: AuthRequest, res) => {
   try {
     const cliente = await Cliente.findOne({ telefono: req.params.telefono })
     if (!cliente) {
@@ -219,8 +362,8 @@ app.get('/api/clientes/:telefono', async (req, res) => {
   }
 })
 
-// 📋 Obtener todos los pedidos
-app.get('/api/pedidos', async (req, res) => {
+// 📋 Obtener todos los pedidos (solo admin y operario)
+app.get('/api/pedidos', verificarToken, adminOOperario, async (req: AuthRequest, res) => {
   try {
     const pedidos = await Pedido.find().sort({ fechaPedido: -1 })
     res.json({
@@ -236,8 +379,8 @@ app.get('/api/pedidos', async (req, res) => {
   }
 })
 
-// 💬 Obtener todas las conversaciones
-app.get('/api/conversaciones', async (req, res) => {
+// 💬 Obtener todas las conversaciones (solo admin y operario)
+app.get('/api/conversaciones', verificarToken, adminOOperario, async (req: AuthRequest, res) => {
   try {
     const conversaciones = await Conversacion.find().sort({ fechaInicio: -1 })
     res.json({
@@ -253,8 +396,8 @@ app.get('/api/conversaciones', async (req, res) => {
   }
 })
 
-// 📊 Estadísticas generales
-app.get('/api/stats', async (req, res) => {
+// 📊 Estadísticas generales (todos pueden ver)
+app.get('/api/stats', verificarToken, async (req: AuthRequest, res) => {
   try {
     const totalClientes = await Cliente.countDocuments()
     const clientesHogar = await Cliente.countDocuments({ tipoCliente: 'hogar' })
