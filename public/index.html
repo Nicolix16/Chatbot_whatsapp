@@ -7,77 +7,82 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-content">
-                <div>
-                    <h1>🐔 Dashboard Avellano</h1>
-                    <p class="subtitle">Panel de Control del Chatbot de WhatsApp</p>
+    <header>
+        <div class="header-content">
+            <div class="header-brand">
+                <div class="header-logo">
+                    <img src="LOGO_AVELLANO.png" alt="Logo Avellano">
                 </div>
-                <div class="header-actions">
-                    <div class="user-info" id="user-info">
-                        <span class="user-name" id="user-name">-</span>
-                        <span class="user-rol-badge" id="user-rol-badge">-</span>
-                    </div>
-                    <button class="refresh-btn" onclick="loadAll()">🔄 Actualizar</button>
-                    <button class="logout-btn" onclick="logout()">🚪 Salir</button>
+                <div class="header-title">
+                    <h1>Avellano Dashboard</h1>
+                    <p class="subtitle">Gestión integral de clientes y pedidos</p>
                 </div>
             </div>
-        </header>
+            <div class="header-actions">
+                <div class="user-info" id="user-info">
+                    <span class="user-name" id="user-name">-</span>
+                    <span class="user-rol-badge" id="user-rol-badge">-</span>
+                </div>
+                <button class="refresh-btn" onclick="loadAll()">Actualizar</button>
+                <button class="logout-btn" onclick="logout()">Salir</button>
+            </div>
+        </div>
+    </header>
 
+    <div class="container">
         <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">👥</div>
+                <div class="stat-icon">■</div>
                 <div class="stat-number" id="totalClientes">-</div>
-                <div class="stat-label">Total Clientes</div>
+                <div class="stat-label">Total de Clientes</div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🏠</div>
+                <div class="stat-icon">◆</div>
                 <div class="stat-number" id="clientesHogar">-</div>
-                <div class="stat-label">Clientes Hogar</div>
+                <div class="stat-label">Clientes Residenciales</div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">💼</div>
+                <div class="stat-icon">●</div>
                 <div class="stat-number" id="clientesNegocio">-</div>
-                <div class="stat-label">Clientes Negocios</div>
+                <div class="stat-label">Clientes Comerciales</div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">📅</div>
+                <div class="stat-icon">▲</div>
                 <div class="stat-number" id="clientesHoy">-</div>
-                <div class="stat-label">Registros Hoy</div>
+                <div class="stat-label">Nuevos Registros</div>
             </div>
         </div>
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('clientes')">👥 Clientes</button>
-            <button class="tab-button" id="tab-pedidos" onclick="switchTab('pedidos')">📋 Pedidos</button>
-            <button class="tab-button" id="tab-conversaciones" onclick="switchTab('conversaciones')">💬 Conversaciones</button>
-            <button class="tab-button" id="tab-usuarios" onclick="switchTab('usuarios')" style="display:none">⚙️ Usuarios</button>
+            <button class="tab-button active" onclick="switchTab('clientes')">Clientes</button>
+            <button class="tab-button" id="tab-pedidos" onclick="switchTab('pedidos')">Pedidos</button>
+            <button class="tab-button" id="tab-conversaciones" onclick="switchTab('conversaciones')">Conversaciones</button>
+            <button class="tab-button" id="tab-usuarios" onclick="switchTab('usuarios')" style="display:none">Usuarios</button>
         </div>
 
         <!-- Tab Clientes -->
         <div id="clientes-tab" class="tab-content active">
-            <h2>👥 Lista de Clientes</h2>
+            <h2>Lista de Clientes</h2>
             <div id="clientes-content" class="loading">Cargando...</div>
         </div>
 
         <!-- Tab Pedidos -->
         <div id="pedidos-tab" class="tab-content">
-            <h2>📋 Lista de Pedidos</h2>
+            <h2>Lista de Pedidos</h2>
             <div id="pedidos-content" class="loading">Cargando...</div>
         </div>
 
         <!-- Tab Conversaciones -->
         <div id="conversaciones-tab" class="tab-content">
-            <h2>💬 Historial de Conversaciones</h2>
+            <h2>Historial de Conversaciones</h2>
             <div id="conversaciones-content" class="loading">Cargando...</div>
         </div>
 
         <!-- Tab Usuarios (Solo Admin) -->
         <div id="usuarios-tab" class="tab-content">
-            <h2>⚙️ Gestión de Usuarios</h2>
+            <h2>Gestión de Usuarios</h2>
             <div id="usuarios-content" class="loading">Cargando...</div>
         </div>
     </div>

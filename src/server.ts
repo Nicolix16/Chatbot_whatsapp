@@ -86,14 +86,28 @@ app.post('/api/auth/register', async (req, res) => {
     })
     await user.save()
     
+    // Generar tokens para el nuevo usuario
+    const payload = { 
+      uid: user._id, 
+      email: user.email, 
+      rol: user.rol,
+      nombre: user.nombre 
+    }
+    const accessToken = generateAccessToken(payload)
+    const refreshToken = generateRefreshToken(payload)
+    
+    user.refreshToken = refreshToken
+    await user.save()
+    
     res.json({ 
       success: true, 
-      data: { 
-        id: user._id, 
-        email: user.email, 
+      accessToken,
+      refreshToken,
+      user: {
+        email: user.email,
         rol: user.rol,
-        nombre: user.nombre 
-      } 
+        nombre: user.nombre
+      }
     })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Error registrando usuario' })
@@ -301,15 +315,8 @@ app.delete('/api/usuarios/:id', verificarToken, soloAdmin, async (req: AuthReque
 
 // Ruta dashboard protegida (debe ir ANTES de servir estáticos)
 app.get('/', (req, res) => {
-  // Si no trae token en query redirigir a login
-  const token = req.query.token
-  if (!token) return res.redirect('/login.html')
-  try {
-    jwt.verify(String(token), JWT_SECRET)
-    return res.sendFile(join(__dirname, '../public/index.html'))
-  } catch {
-    return res.redirect('/login.html')
-  }
+  // Servir el dashboard sin validación - la validación ocurre en app.js
+  return res.sendFile(join(__dirname, '../public/index.html'))
 })
 
 // 📊 Clientes - Todos pueden ver, pero con diferentes niveles de detalle

@@ -1,5 +1,19 @@
 const API_URL = 'http://localhost:3009/api'
 
+// Verificar autenticación al cargar la página
+function checkAuthentication() {
+  const token = localStorage.getItem('access_token')
+  const userData = localStorage.getItem('user_data')
+  
+  if (!token || !userData) {
+    // No hay token, redirigir al login
+    window.location.href = '/login.html'
+    return false
+  }
+  
+  return true
+}
+
 // Obtener datos del usuario desde localStorage
 function getUserData() {
   const data = localStorage.getItem('user_data')
@@ -14,6 +28,11 @@ function hasRole(...roles) {
 
 // Inicializar UI según rol del usuario
 function initializeRoleBasedUI() {
+  // Primero verificar autenticación
+  if (!checkAuthentication()) {
+    return
+  }
+  
   const user = getUserData()
   if (!user) {
     window.location.href = '/login.html'

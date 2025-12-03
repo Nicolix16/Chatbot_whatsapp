@@ -1,57 +1,811 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Login Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    .login-container{max-width:420px;margin:60px auto}
-    .login-box{background:#fff;padding:35px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.15)}
-    .login-box h2{margin-bottom:20px;text-align:center;color:#667eea}
-    .login-box input{width:100%;padding:12px;margin-bottom:15px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box}
-    .login-box button{width:100%;padding:14px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:600;border-radius:12px;cursor:pointer;margin-bottom:10px}
-    .login-box button:hover{transform:scale(1.02);transition:transform .2s}
-    .login-box button.secondary{background:linear-gradient(135deg,#42e695,#3bb2b8)}
-    .error{color:#c0392b;margin:10px 0;text-align:center;font-size:.9em;min-height:20px}
-    .success{color:#27ae60;margin:10px 0;text-align:center;font-size:.9em;min-height:20px}
-    .toggle-mode{text-align:center;margin-top:15px;color:#666;font-size:.9em}
-    .toggle-mode a{color:#667eea;cursor:pointer;text-decoration:underline}
-    .toggle-mode a:hover{color:#764ba2}
-    .hidden{display:none}
-    .password-hint{font-size:.85em;color:#666;margin-top:-10px;margin-bottom:15px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avellano - Panel de Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --avellano-red: #D1132A;
+            --avellano-yellow: #F2A904;
+            --avellano-green: #006633;
+            --avellano-gray: #706F6F;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Candara', 'Segoe UI', sans-serif;
+            background: #f0f0f0;
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            height: 100vh;
+            background: white;
+        }
+
+        /* ===== LADO IZQUIERDO - BRANDING ===== */
+        .login-brand {
+            background: linear-gradient(135deg, var(--avellano-red) 0%, var(--avellano-yellow) 100%);
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decoración de fondo */
+        .login-brand::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            top: -150px;
+            right: -150px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .login-brand::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            bottom: -100px;
+            left: -100px;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(20px); }
+        }
+
+        /* Logo y branding */
+        .logo-section {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .logo-img {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            animation: bounce 2.5s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .brand-title {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-subtitle {
+            font-size: 16px;
+            opacity: 0.95;
+            font-style: italic;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        /* Características */
+        .features {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            display: grid;
+            gap: 18px;
+            padding: 0 20px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .feature:hover {
+            background: rgba(255, 255, 255, 0.28);
+            transform: translateX(8px);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 18px;
+            flex-shrink: 0;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== LADO DERECHO - FORMULARIO ===== */
+        .login-form-container {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: auto;
+        }
+
+        .form-wrapper {
+            max-width: 100%;
+        }
+
+        .form-header {
+            margin-bottom: 35px;
+        }
+
+        .form-header h2 {
+            font-size: 32px;
+            color: #222;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .form-header p {
+            color: #999;
+            font-size: 15px;
+            font-weight: 300;
+        }
+
+        /* Messages */
+        .message-box {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            border-left: 4px solid;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: #fef0f0;
+            color: #c0392b;
+            border-color: var(--avellano-red);
+        }
+
+        .success-message {
+            background: #f0fef0;
+            color: #27ae60;
+            border-color: var(--avellano-green);
+        }
+
+        /* Formulario */
+        .form-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'Candara', sans-serif;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--avellano-red);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(209, 19, 42, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #ccc;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0.3;
+            font-weight: 700;
+        }
+
+        /* Toggle entre login y registro */
+        .form-toggle {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .form-toggle.active {
+            display: block;
+        }
+
+        .form-toggle p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-toggle a {
+            color: var(--avellano-red);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .form-toggle a:hover {
+            color: var(--avellano-green);
+        }
+
+        /* Botones */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--avellano-red) 0%, var(--avellano-yellow) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            box-shadow: 0 6px 20px rgba(209, 19, 42, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .login-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(209, 19, 42, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--avellano-red);
+            border: 2px solid var(--avellano-red);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--avellano-red);
+            color: white;
+            box-shadow: 0 6px 20px rgba(209, 19, 42, 0.2);
+        }
+
+        .form-divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #ccc;
+            font-size: 13px;
+        }
+
+        .form-divider span {
+            background: white;
+            padding: 0 10px;
+        }
+
+        /* Tabs de formulario */
+        .form-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Candara', sans-serif;
+        }
+
+        .form-tab.active {
+            color: var(--avellano-red);
+            border-bottom-color: var(--avellano-red);
+        }
+
+        .form-tab:hover {
+            color: #666;
+        }
+
+        .form-content {
+            display: none;
+        }
+
+        .form-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-brand {
+                padding: 50px 30px;
+            }
+
+            .login-form-container {
+                padding: 50px 30px;
+            }
+
+            .brand-title {
+                font-size: 40px;
+            }
+
+            .form-header h2 {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-wrapper {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .login-brand {
+                padding: 40px 25px;
+                min-height: 300px;
+                justify-content: center;
+            }
+
+            .logo-icon {
+                font-size: 70px;
+            }
+
+            .brand-title {
+                font-size: 32px;
+            }
+
+            .features {
+                display: none;
+            }
+
+            .login-form-container {
+                padding: 40px 25px;
+                min-height: auto;
+            }
+
+            .form-header h2 {
+                font-size: 24px;
+            }
+
+            .login-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="login-box">
-      <!-- Formulario de Login -->
-      <div id="login-form">
-        <h2>🔐 Iniciar Sesión</h2>
-        <div class="error" id="login-err"></div>
-        <input type="email" id="login-email" placeholder="Correo electrónico" autocomplete="email">
-        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password">
-        <button onclick="login()">Ingresar</button>
-        <div class="toggle-mode">
-          ¿No tienes cuenta? <a onclick="showRegister()">Crear cuenta</a>
-        </div>
-      </div>
+    <div class="login-wrapper">
+        <!-- LADO IZQUIERDO - BRANDING -->
+        <div class="login-brand">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+                <div class="logo-section">
+                    <img src="/LOGO_AVELLANO.png" alt="Avellano Logo" class="logo-img">
+                </div>
+            </div>
 
-      <!-- Formulario de Registro -->
-      <div id="register-form" class="hidden">
-        <h2>📝 Crear Cuenta</h2>
-        <div class="error" id="register-err"></div>
-        <div class="success" id="register-success"></div>
-        <input type="email" id="register-email" placeholder="Correo electrónico" autocomplete="email">
-        <input type="password" id="register-password" placeholder="Contraseña" autocomplete="new-password">
-        <div class="password-hint">Mínimo 6 caracteres</div>
-        <input type="password" id="register-password-confirm" placeholder="Confirmar contraseña" autocomplete="new-password">
-        <button onclick="register()">Crear Cuenta</button>
-        <div class="toggle-mode">
-          ¿Ya tienes cuenta? <a onclick="showLogin()">Iniciar sesión</a>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">—</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px;">Dashboard</div>
+                        <div style="font-size: 13px; opacity: 0.85;">Datos en tiempo real</div>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">—</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px;">Clientes</div>
+                        <div style="font-size: 13px; opacity: 0.85;">Gestión integral</div>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">—</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px;">Pedidos</div>
+                        <div style="font-size: 13px; opacity: 0.85;">Control total</div>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">—</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px;">Conversaciones</div>
+                        <div style="font-size: 13px; opacity: 0.85;">Historial completo</div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- LADO DERECHO - FORMULARIO -->
+        <div class="login-form-container">
+            <div class="form-wrapper">
+                <!-- Tabs -->
+                <div class="form-tabs">
+                    <button class="form-tab active" onclick="switchTab('login')">Iniciar Sesión</button>
+                    <button class="form-tab" onclick="switchTab('register')">Crear Cuenta</button>
+                </div>
+
+                <!-- LOGIN -->
+                <div id="login" class="form-content active">
+                    <div class="form-header">
+                        <h2>Bienvenido</h2>
+                        <p>Accede a tu panel de control</p>
+                    </div>
+
+                    <div class="message-box error-message" id="loginError"></div>
+                    <div class="message-box success-message" id="loginSuccess"></div>
+
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="login-email">Correo Electrónico</label>
+                            <div class="input-wrapper">
+                                <input type="email" id="login-email" placeholder="tu@email.com" required>
+                                <div class="input-icon">—</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="login-password">Contraseña</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="login-password" placeholder="••••••••" required>
+                                <div class="input-icon">—</div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="login-btn" id="loginBtn">
+                            <span>Ingresar al Dashboard</span>
+                            <div class="spinner" id="loginSpinner"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- REGISTRO -->
+                <div id="register" class="form-content">
+                    <div class="form-header">
+                        <h2>Crear Cuenta</h2>
+                        <p>Completa el formulario para acceder</p>
+                    </div>
+
+                    <div class="message-box error-message" id="registerError"></div>
+                    <div class="message-box success-message" id="registerSuccess"></div>
+
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="register-email">Correo Electrónico</label>
+                            <div class="input-wrapper">
+                                <input type="email" id="register-email" placeholder="tu@email.com" required>
+                                <div class="input-icon">—</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-password">Contraseña</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                                <div class="input-icon">—</div>
+                            </div>
+                            <div style="font-size: 12px; color: #999; margin-top: 4px;">Mínimo 6 caracteres</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-password-confirm">Confirmar Contraseña</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="register-password-confirm" placeholder="••••••••" required minlength="6">
+                                <div class="input-icon">—</div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="login-btn" id="registerBtn">
+                            <span>Crear mi Cuenta</span>
+                            <div class="spinner" id="registerSpinner"></div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <script src="login.js"></script>
+
+    <script>
+        // Función para cambiar entre tabs
+        function switchTab(tab) {
+            // Actualizar contenido
+            document.querySelectorAll('.form-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(tab).classList.add('active');
+
+            // Actualizar tabs
+            document.querySelectorAll('.form-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Funciones de mensaje
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = '⚠️ ' + message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = '✓ ' + message;
+            element.style.display = 'block';
+        }
+
+        // LOGIN
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('loginSpinner');
+
+            if (!email || !password) {
+                showError('loginError', 'Por favor completa todos los campos');
+                return;
+            }
+
+            btn.disabled = true;
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.accessToken) {
+                    // Guardar tokens en localStorage
+                    localStorage.setItem('access_token', data.accessToken);
+                    localStorage.setItem('refresh_token', data.refreshToken);
+                    localStorage.setItem('user_data', JSON.stringify(data.user));
+                    
+                    showSuccess('loginSuccess', 'Ingreso exitoso. Redirigiendo...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showError('loginError', data.error || 'Credenciales inválidas');
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('loginError', 'Error en el servidor. Intenta más tarde.');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        });
+
+        // REGISTRO
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const passwordConfirm = document.getElementById('register-password-confirm').value;
+            const btn = document.getElementById('registerBtn');
+            const spinner = document.getElementById('registerSpinner');
+
+            if (!email || !password || !passwordConfirm) {
+                showError('registerError', 'Por favor completa todos los campos');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showError('registerError', 'Las contraseñas no coinciden');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('registerError', 'La contraseña debe tener mínimo 6 caracteres');
+                return;
+            }
+
+            btn.disabled = true;
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Guardar tokens en localStorage
+                    localStorage.setItem('access_token', data.accessToken);
+                    localStorage.setItem('refresh_token', data.refreshToken);
+                    localStorage.setItem('user_data', JSON.stringify(data.user || { email: email, rol: 'visitante' }));
+                    
+                    showSuccess('registerSuccess', 'Cuenta creada exitosamente. Redirigiendo...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    showError('registerError', data.error || 'Error al crear la cuenta');
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('registerError', 'Error en el servidor. Intenta más tarde.');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
