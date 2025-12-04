@@ -1,0 +1,10 @@
+// Archivo central para exportar todos los flows
+export * from './welcome.flow.js'
+export * from './pedido.flow.js'
+export * from './hogar.flow.js'
+export * from './negocios.flow.js'
+export * from './recetas.flow.js'
+export * from './atencion.flow.js'
+export * from './ubicacion.flow.js'
+export * from './navigation.flow.js'
+export * from './router.flow.js'

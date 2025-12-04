@@ -353,12 +353,25 @@ async function loadUsuarios() {
                             <tr>
                                 <td>${user.nombre || '-'}</td>
                                 <td>${user.email}</td>
-                                <td><span class="badge rol-${user.rol}">${user.rol.toUpperCase()}</span></td>
+                                <td>
+                                    <select class="rol-selector" onchange="changeUserRole('${user._id}', this.value)" ${user.rol === 'administrador' ? 'disabled' : ''}>
+                                        <option value="visitante" ${user.rol === 'visitante' ? 'selected' : ''}>Visitante</option>
+                                        <option value="operario" ${user.rol === 'operario' ? 'selected' : ''}>Operario</option>
+                                        <option value="administrador" ${user.rol === 'administrador' ? 'selected' : ''}>Administrador</option>
+                                    </select>
+                                </td>
                                 <td><span class="badge ${user.activo ? 'badge-success' : 'badge-danger'}">${user.activo ? 'Activo' : 'Inactivo'}</span></td>
                                 <td>${new Date(user.createdAt).toLocaleDateString('es-CO')}</td>
                                 <td>
-                                    <button class="btn-small" onclick="toggleUserStatus('${user._id}', ${!user.activo})">
+                                    <button class="btn-small ${user.activo ? 'btn-danger' : 'btn-success'}" 
+                                            onclick="toggleUserStatus('${user._id}', ${!user.activo})"
+                                            ${user.rol === 'administrador' ? 'disabled' : ''}>
                                         ${user.activo ? '🚫 Desactivar' : '✅ Activar'}
+                                    </button>
+                                    <button class="btn-small btn-danger" 
+                                            onclick="deleteUser('${user._id}', '${user.email}')"
+                                            ${user.rol === 'administrador' ? 'disabled' : ''}>
+                                        🗑️ Eliminar
                                     </button>
                                 </td>
                             </tr>
@@ -381,6 +394,37 @@ async function loadUsuarios() {
     }
 }
 
+// Cambiar rol de usuario (solo admin)
+async function changeUserRole(userId, newRole) {
+    if (!hasRole('administrador')) return
+    
+    if (!confirm(`¿Estás seguro de cambiar el rol de este usuario a ${newRole.toUpperCase()}?`)) {
+        loadUsuarios() // Recargar para resetear el select
+        return
+    }
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/usuarios/${userId}/rol`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rol: newRole })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ Rol actualizado exitosamente a ${newRole.toUpperCase()}`)
+            loadUsuarios()
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo actualizar el rol'))
+            loadUsuarios()
+        }
+    } catch (error) {
+        console.error('Error actualizando rol:', error);
+        alert('❌ Error de conexión')
+        loadUsuarios()
+    }
+}
+
 // Activar/Desactivar usuario (solo admin)
 async function toggleUserStatus(userId, newStatus) {
     if (!hasRole('administrador')) return
@@ -398,13 +442,40 @@ async function toggleUserStatus(userId, newStatus) {
         const result = await response.json();
         
         if (result.success) {
+            alert(`✅ Usuario ${newStatus ? 'activado' : 'desactivado'} exitosamente`)
             loadUsuarios()
         } else {
-            alert('Error: ' + (result.error || 'No se pudo actualizar el usuario'))
+            alert('❌ Error: ' + (result.error || 'No se pudo actualizar el usuario'))
         }
     } catch (error) {
         console.error('Error actualizando usuario:', error);
-        alert('Error de conexión')
+        alert('❌ Error de conexión')
+    }
+}
+
+// Eliminar usuario (solo admin)
+async function deleteUser(userId, userEmail) {
+    if (!hasRole('administrador')) return
+    
+    if (!confirm(`⚠️ ¿Estás seguro de ELIMINAR permanentemente al usuario ${userEmail}?\n\nEsta acción NO se puede deshacer.`)) {
+        return
+    }
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/usuarios/${userId}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Usuario eliminado exitosamente')
+            loadUsuarios()
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo eliminar el usuario'))
+        }
+    } catch (error) {
+        console.error('Error eliminando usuario:', error);
+        alert('❌ Error de conexión')
     }
 }
 
