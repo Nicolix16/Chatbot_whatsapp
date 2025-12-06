@@ -123,6 +123,17 @@
         </main>
     </div>
 
+    <!-- Modal para ver detalle de conversación -->
+    <div id="modalConversacion" class="modal-conversacion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Conversación</h2>
+                <button class="modal-close" onclick="cerrarModalConversacion()">✕ Cerrar</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
     <script>
         function selectNav(element) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));

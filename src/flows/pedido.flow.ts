@@ -27,7 +27,7 @@ export const pedidoFlow = addKeyword<Provider, Database>([
       buttons: [
         { body: '🏠 Hogar' },
         { body: '💼 Negocios' },
-        { body: '📍 Encuéntranos' },
+        { body: 'Volver menú' },
       ],
     },
   ])

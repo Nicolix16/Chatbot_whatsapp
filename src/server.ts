@@ -389,17 +389,56 @@ app.get('/api/pedidos', verificarToken, adminOOperario, async (req: AuthRequest,
 // 💬 Obtener todas las conversaciones (solo admin y operario)
 app.get('/api/conversaciones', verificarToken, adminOOperario, async (req: AuthRequest, res) => {
   try {
-    const conversaciones = await Conversacion.find().sort({ fechaInicio: -1 })
+    const conversaciones = await Conversacion.find().sort({ fechaUltimoMensaje: -1 })
+    
+    // Enriquecer con datos del cliente
+    const conversacionesEnriquecidas = await Promise.all(
+      conversaciones.map(async (conv) => {
+        const cliente = await Cliente.findOne({ telefono: conv.telefono })
+        return {
+          ...conv.toObject(),
+          nombreCliente: cliente?.nombre || conv.nombreCliente,
+          nombreNegocio: cliente?.nombreNegocio || conv.nombreNegocio,
+          tipoCliente: cliente?.tipoCliente
+        }
+      })
+    )
+    
     res.json({
       success: true,
-      total: conversaciones.length,
-      data: conversaciones,
+      total: conversacionesEnriquecidas.length,
+      data: conversacionesEnriquecidas,
     })
   } catch (error) {
     res.status(500).json({
       success: false,
       error: 'Error obteniendo conversaciones',
     })
+  }
+})
+
+// 💬 Obtener detalle de una conversación específica
+app.get('/api/conversaciones/:telefono', verificarToken, adminOOperario, async (req: AuthRequest, res) => {
+  try {
+    const conversacion = await Conversacion.findOne({ telefono: req.params.telefono })
+    if (!conversacion) {
+      return res.status(404).json({ success: false, error: 'Conversación no encontrada' })
+    }
+    
+    const cliente = await Cliente.findOne({ telefono: req.params.telefono })
+    
+    res.json({
+      success: true,
+      data: {
+        ...conversacion.toObject(),
+        nombreCliente: cliente?.nombre,
+        nombreNegocio: cliente?.nombreNegocio,
+        tipoCliente: cliente?.tipoCliente,
+        clienteInfo: cliente
+      }
+    })
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Error obteniendo conversación' })
   }
 })
 

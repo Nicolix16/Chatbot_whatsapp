@@ -288,28 +288,30 @@ async function loadConversaciones() {
         const container = document.getElementById('conversaciones-content');
         
         if (result.success && result.data.length > 0) {
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Teléfono</th>
-                            <th>Flujo Actual</th>
-                            <th>Mensajes</th>
-                            <th>Fecha Inicio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${result.data.map(conv => `
-                            <tr>
-                                <td>${conv.telefono}</td>
-                                <td>${conv.flujoActual || '-'}</td>
-                                <td>${conv.mensajes.length}</td>
-                                <td>${new Date(conv.fechaInicio).toLocaleString('es-CO')}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            container.innerHTML = result.data.map(conv => {
+                const nombreDisplay = conv.nombreNegocio || conv.nombreCliente || conv.telefono;
+                const tipoCliente = conv.tipoCliente || 'desconocido';
+                const totalMensajes = conv.mensajes?.length || 0;
+                const ultimaFecha = conv.fechaUltimoMensaje ? 
+                    new Date(conv.fechaUltimoMensaje).toLocaleString('es-CO') : '-';
+                
+                return `
+                    <div class="conversacion-card" onclick="verDetalleConversacion('${conv.telefono}')">
+                        <div class="conversacion-header">
+                            <div>
+                                <div class="conversacion-nombre">${nombreDisplay}</div>
+                                <div class="conversacion-telefono">📱 ${conv.telefono}</div>
+                            </div>
+                            <span class="badge badge-${tipoCliente}">${tipoCliente.toUpperCase()}</span>
+                        </div>
+                        <div class="conversacion-stats">
+                            <span>💬 ${totalMensajes} mensajes</span>
+                            <span>📅 ${ultimaFecha}</span>
+                            <span>🔄 ${conv.flujoActual || 'N/A'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         } else {
             container.innerHTML = `
                 <div class="empty-state">
@@ -322,6 +324,131 @@ async function loadConversaciones() {
         console.error('Error cargando conversaciones:', error);
         document.getElementById('conversaciones-content').innerHTML = 
             '<div class="empty-state"><p>Error cargando datos</p></div>';
+    }
+}
+
+// Ver detalle de conversación
+async function verDetalleConversacion(telefono) {
+    try {
+        const response = await fetchWithAuth(`${API_URL}/conversaciones/${telefono}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const conv = result.data;
+            const nombreDisplay = conv.nombreNegocio || conv.nombreCliente || telefono;
+            
+            // Actualizar título del modal
+            document.getElementById('modalTitle').textContent = 
+                `Conversación con ${nombreDisplay}`;
+            
+            // Separar interacciones importantes
+            const interaccionesImportantes = conv.interaccionesImportantes || [];
+            const pedidos = interaccionesImportantes.filter(i => i.tipo === 'pedido');
+            const registros = interaccionesImportantes.filter(i => i.tipo === 'registro');
+            const contactos = interaccionesImportantes.filter(i => i.tipo === 'contacto_asesor');
+            
+            // Construir contenido del modal
+            let modalContent = `
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: var(--avellano-red); margin-bottom: 15px;">
+                        📊 Resumen de Interacciones
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value">${pedidos.length}</div>
+                            <div class="stat-label">Pedidos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${registros.length}</div>
+                            <div class="stat-label">Registros</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${contactos.length}</div>
+                            <div class="stat-label">Contactos</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Sección de interacciones importantes
+            if (interaccionesImportantes.length > 0) {
+                modalContent += `
+                    <div class="interacciones-importantes">
+                        <h4 style="margin-bottom: 10px; color: var(--avellano-red);">
+                            ⭐ Interacciones Importantes
+                        </h4>
+                `;
+                
+                interaccionesImportantes.forEach(interaccion => {
+                    modalContent += `
+                        <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 8px;">
+                            <span class="interaccion-badge interaccion-${interaccion.tipo}">
+                                ${interaccion.tipo.toUpperCase()}
+                            </span>
+                            <div style="margin-top: 8px; font-size: 13px;">
+                                ${interaccion.contenido}
+                            </div>
+                            <div style="margin-top: 5px; font-size: 11px; color: #999;">
+                                ${new Date(interaccion.timestamp).toLocaleString('es-CO')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                modalContent += `</div>`;
+            }
+            
+            // Timeline de mensajes
+            modalContent += `
+                <h4 style="margin-top: 25px; margin-bottom: 15px; color: var(--avellano-red);">
+                    💬 Historial de Conversación
+                </h4>
+                <div class="conversacion-timeline">
+            `;
+            
+            if (conv.mensajes && conv.mensajes.length > 0) {
+                conv.mensajes.forEach(mensaje => {
+                    const clase = mensaje.rol === 'usuario' ? 'mensaje-usuario' : 'mensaje-bot';
+                    const icono = mensaje.rol === 'usuario' ? '👤' : '🤖';
+                    
+                    modalContent += `
+                        <div class="timeline-item">
+                            <div class="mensaje-item ${clase}">
+                                <strong>${icono} ${mensaje.rol === 'usuario' ? 'Cliente' : 'Bot Avellano'}</strong>
+                                <div style="margin-top: 5px;">${mensaje.mensaje}</div>
+                                <div class="mensaje-timestamp">
+                                    ${new Date(mensaje.timestamp).toLocaleString('es-CO')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                modalContent += '<p style="text-align: center; color: #999;">No hay mensajes registrados</p>';
+            }
+            
+            modalContent += `</div>`;
+            
+            // Mostrar modal
+            document.getElementById('modalBody').innerHTML = modalContent;
+            document.getElementById('modalConversacion').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error cargando detalle de conversación:', error);
+        alert('❌ Error cargando detalle de conversación');
+    }
+}
+
+// Cerrar modal de conversación
+function cerrarModalConversacion() {
+    document.getElementById('modalConversacion').classList.remove('active');
+}
+
+// Cerrar modal al hacer click fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('modalConversacion');
+    if (event.target === modal) {
+        cerrarModalConversacion();
     }
 }
 

@@ -1,4 +1,4 @@
-
+  
 const API_URL = 'http://localhost:3009/api'
 
 // Función para mostrar el formulario de registro
