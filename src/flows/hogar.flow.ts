@@ -2,18 +2,45 @@ import { addKeyword } from '@builderbot/bot'
 import { MetaProvider as Provider } from '@builderbot/provider-meta'
 import { MongoAdapter } from '@builderbot/database-mongo'
 import { reiniciarTemporizador } from './utils/temporizador.js'
+import Cliente from '../models/Cliente.js'
 
 type Database = typeof MongoAdapter
 
 export const hogarFlow = addKeyword<Provider, Database>([
-  '1',
-  '1. Hogar',
-  'hogar',
   '🏠 Hogar',
   'Hogar',
 ]).addAction(async (ctx, { flowDynamic }) => {
   const user = ctx.from
   await reiniciarTemporizador(user, flowDynamic)
+
+  // Guardar o actualizar el tipo de cliente como 'hogar'
+  try {
+    let cliente = await Cliente.findOne({ telefono: user })
+    
+    if (cliente) {
+      // Solo actualizar si el cliente no es de tipo negocio
+      if (!['tienda', 'asadero', 'restaurante_estandar', 'restaurante_premium', 'mayorista'].includes(cliente.tipoCliente)) {
+        cliente.tipoCliente = 'hogar'
+      }
+      cliente.ultimaInteraccion = new Date()
+      cliente.conversaciones += 1
+      await cliente.save()
+    } else {
+      // Crear nuevo cliente solo si no existe
+      cliente = new Cliente({
+        telefono: user,
+        tipoCliente: 'hogar',
+        fechaRegistro: new Date(),
+        ultimaInteraccion: new Date(),
+        conversaciones: 1,
+      })
+      await cliente.save()
+    }
+    
+    console.log(`✅ Cliente hogar registrado/actualizado: ${user}`)
+  } catch (error) {
+    console.error('❌ Error guardando cliente hogar:', error)
+  }
 
   await flowDynamic([
     {

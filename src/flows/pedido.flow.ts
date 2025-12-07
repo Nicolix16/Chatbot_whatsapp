@@ -27,6 +27,15 @@ export const pedidoFlow = addKeyword<Provider, Database>([
       buttons: [
         { body: '🏠 Hogar' },
         { body: '💼 Negocios' },
+        { body: '📍 Encuéntranos - Almacenes Avellano' },
+      ],
+    },
+  ])
+
+  await flowDynamic([
+    {
+      body: '¿O prefieres volver al menú principal?',
+      buttons: [
         { body: 'Volver menú' },
       ],
     },
