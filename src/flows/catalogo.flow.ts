@@ -315,35 +315,102 @@ export async function finalizarPedido(ctx: any, state: any, flowDynamic: any, ti
     .map((p: any) => `  • ${p.cantidad}x ${p.nombre} - $${p.subtotal.toLocaleString('es-CO')}`)
     .join('\n')
   
-  // MENSAJE FINAL ACTUALIZADO
   await flowDynamic([
-    '🎉 *¡PEDIDO RECIBIDO EXITOSAMENTE!*',
+    '✅ PEDIDO RECIBIDO EXITOSAMENTE ✅',
     '',
-    `📋 *ID de Pedido:* ${idPedido}`,
+    `📋 ID de Pedido: ${idPedido}`,
     '',
-    '📦 *Resumen de tu pedido:*',
+    '📦 Resumen de tu pedido:',
     resumenPedido,
     '',
-    `💰 *TOTAL:* $${total.toLocaleString('es-CO')}`,
+    `💰 TOTAL: $${total.toLocaleString('es-CO')}`,
     '',
-    '━━━━━━━━━━━━━━━━━━━',
+    '─────────────────────────',
     '',
-    '✅ *Estamos procesando tu pedido*',
+    '✅ Estamos procesando tu pedido',
     '',
-    '👨‍💼 Un *Asesor Comercial* se contactará contigo pronto para atender tu solicitud y coordinar la entrega.',
+    `👨‍💼 Un Asesor Comercial se contactará contigo pronto para atender tu solicitud y coordinar la entrega.`,
     '',
-    `📞 *Coordinador asignado:* ${coordinador.nombre}`,
+    `📞 Coordinador asignado: ${coordinador.nombre}`,
+    `📱 Teléfono: ${coordinador.telefono}`,
     '',
-    '⏰ *Tiempo estimado de contacto:* 15-30 minutos (horario laboral)',
+    '⏰ Tiempo estimado de contacto: 15-30 minutos (horario laboral)',
     '',
-    '━━━━━━━━━━━━━━━━━━━',
+    '─────────────────────────',
     '',
-    '📌 *Recuerda guardar tu ID de pedido:* `' + idPedido + '`',
+    `🔖 Recuerda guardar tu ID de pedido: ${idPedido}`,
     '',
-    '¡Gracias por confiar en Avellano! 🐔💛',
+    '✅ ¡Gracias por confiar en Avellano! 💛',
     '',
     '💬 Si necesitas algo más, escribe "menú" para volver al inicio.',
   ].join('\n'))
   
   console.log(`📨 Pedido confirmado - ID: ${idPedido} - Cliente: ${cliente.nombreNegocio || cliente.personaContacto}`)
 }
+
+  // Flujo para finalizar pedido
+export const finalizarFlow = addKeyword<Provider, Database>([
+  'finalizar',
+  'Finalizar',
+]).addAction(async (ctx, { flowDynamic, state, gotoFlow }) => {
+  const user = ctx.from
+  const myState = state.getMyState()
+  const tipoCliente = myState.tipoCliente || 'hogar'
+  
+  await finalizarPedido(ctx, state, flowDynamic, tipoCliente)
+  
+  // Mostrar opciones al finalizar
+  await flowDynamic([
+    {
+      body: '¿Deseas hacer algo más?',
+      buttons: [
+        { body: 'Pedido' },
+        { body: 'Volver menú' },
+      ]
+    }
+  ])
+})
+
+// Flujo para cancelar pedido
+export const cancelarFlow = addKeyword<Provider, Database>([
+  'cancelar',
+  'Cancelar',
+]).addAction(async (ctx, { flowDynamic, state }) => {
+  const user = ctx.from
+  const myState = state.getMyState()
+  const carrito = myState.carrito || []
+  
+  if (carrito.length === 0) {
+    await flowDynamic('Tu carrito ya estaba vacío.')
+    return
+  }
+  
+  // Limpiar el carrito
+  await state.update({ carrito: [] })
+  
+  await flowDynamic([
+    '❌ PEDIDO CANCELADO ❌',
+    '',
+    'Entendemos que cambies de opinión. Aquí en Avellano 🐔 siempre te esperamos con los mejores productos.',
+    '',
+    '💭 Tu opinión es importante para nosotros.',
+    '',
+    '🎁 Te animamos a que nos visites pronto. Tenemos muchas sorpresas para ti.',
+    '',
+    '¡Gracias por considerarnos! 💛',
+    '',
+    '👋 Esperamos verte de nuevo pronto en Avellano',
+  ].join('\n'))
+  
+  // Mostrar opciones
+  await flowDynamic([
+    {
+      body: '¿Deseas hacer algo más?',
+      buttons: [
+        { body: 'Pedido' },
+        { body: 'Recetas' },
+        { body: 'Volver menú' },
+      ]
+    }
+  ])
+})

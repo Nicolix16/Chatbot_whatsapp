@@ -194,7 +194,7 @@ export const negociosFlow = addKeyword<Provider, Database>([
   await flowDynamic([
     {
       body: [
-        '¡Excelente! Atiendo diferentes tipos de negocios 💼',
+        '💼 Excelente! Atiendo diferentes tipos de negocios',
         '',
         'Por favor selecciona el tipo de negocio que mejor se ajuste a tu establecimiento:',
       ].join('\n'),
@@ -220,7 +220,6 @@ export const negociosFlow = addKeyword<Provider, Database>([
 
 // Flujos para cada tipo de negocio
 export const tiendasFlow = addKeyword<Provider, Database>([
-  '🏪 Tiendas',
   'Tiendas',
   'tiendas',
 ]).addAction(async (ctx, { flowDynamic, state }) => {
@@ -253,7 +252,6 @@ export const tiendasFlow = addKeyword<Provider, Database>([
 })
 
 export const asaderosFlow = addKeyword<Provider, Database>([
-  '🍗 Asaderos',
   'Asaderos',
   'asaderos',
 ]).addAction(async (ctx, { flowDynamic, state }) => {
@@ -286,17 +284,17 @@ export const asaderosFlow = addKeyword<Provider, Database>([
 })
 
 export const restaurantesEstandarFlow = addKeyword<Provider, Database>([
-  '🍽️ Restaurantes Estándar',
   'Restaurantes Estándar',
   'restaurantes estándar',
   'restaurantes estandar',
+  'Restaurantes',
 ]).addAction(async (ctx, { flowDynamic, state }) => {
   const user = ctx.from
   await reiniciarTemporizador(user, flowDynamic)
   await state.update({ esperandoDatosNegocio: true, tipoNegocio: 'restaurante_estandar' })
   
   await flowDynamic([
-    '¡Genial! Atendemos restaurantes estándar 🍽️',
+    'Atendemos restaurantes estándar',
     '',
     'Por favor envíame los siguientes datos en un solo mensaje:',
     '',
@@ -320,16 +318,17 @@ export const restaurantesEstandarFlow = addKeyword<Provider, Database>([
 })
 
 export const restaurantePremiumFlow = addKeyword<Provider, Database>([
-  '⭐ Restaurantes Premium',
   'Restaurantes Premium',
   'restaurantes premium',
+  'restaurantes p',
+  'Restaurantes P',
 ]).addAction(async (ctx, { flowDynamic, state }) => {
   const user = ctx.from
   await reiniciarTemporizador(user, flowDynamic)
   await state.update({ esperandoDatosNegocio: true, tipoNegocio: 'restaurante_premium' })
   
   await flowDynamic([
-    '¡Excelente elección! Atendemos restaurantes premium ⭐',
+    '¡Excelente elección! Atendemos restaurantes premium',
     '',
     'Por favor envíame los siguientes datos en un solo mensaje:',
     '',
@@ -353,7 +352,6 @@ export const restaurantePremiumFlow = addKeyword<Provider, Database>([
 })
 
 export const mayoristasFlow = addKeyword<Provider, Database>([
-  '📦 Mayoristas',
   'Mayoristas',
   'mayoristas',
 ]).addAction(async (ctx, { flowDynamic, state }) => {
@@ -362,7 +360,7 @@ export const mayoristasFlow = addKeyword<Provider, Database>([
   await state.update({ esperandoDatosNegocio: true, tipoNegocio: 'mayorista' })
   
   await flowDynamic([
-    '¡Perfecto! Atendemos mayoristas y distribuidores 📦',
+    'Perfecto! Atendemos mayoristas',
     '',
     'Por favor envíame los siguientes datos en un solo mensaje:',
     '',

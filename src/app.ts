@@ -31,6 +31,8 @@ import {
   clienteFlow,
   infoGeneralFlow,
   actionRouterFlow,
+  finalizarFlow,
+  cancelarFlow,
 } from './flows/index.js'
 
 dotenv.config()
@@ -58,8 +60,8 @@ const main = async () => {
     negociosFlow,
     tiendasFlow,
     asaderosFlow,
-    restaurantesEstandarFlow,
     restaurantePremiumFlow,
+    restaurantesEstandarFlow,
     mayoristasFlow,
     enviarInfoNegocioFlow,
     verCatalogoFlow,
@@ -73,6 +75,8 @@ const main = async () => {
     clienteFlow,
     infoGeneralFlow,
     capturarDatosNegocioFlow,
+    finalizarFlow,
+    cancelarFlow,
     actionRouterFlow,
   ])
 

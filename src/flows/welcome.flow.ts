@@ -18,10 +18,10 @@ export const welcomeFlow = addKeyword<Provider, Database>([
   await flowDynamic([
     {
       body: [
-        '👋 ¡Hola! Bienvenido(a) a *Avellano*, donde alimentar es amar 💖🐔',
+        '👋 ¡Hola! Bienvenido(a) a Avellano',
         '',
-        'Soy tu asistente virtual y estoy aquí para ayudarte.',
-        'Por favor elige una opción para continuar 👇',
+        'Soy tu asistente virtual  y estoy aquí para ayudarte.',
+        'Por favor elige una opción para continuar:',
       ].join('\n'),
       buttons: [
         { body: '🛒 Pedido' },

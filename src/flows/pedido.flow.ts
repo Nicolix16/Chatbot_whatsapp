@@ -20,14 +20,14 @@ export const pedidoFlow = addKeyword<Provider, Database>([
   await flowDynamic([
     {
       body: [
-        'Perfecto, vamos a crear tu pedido 🛒',
+        '🛒 Perfecto, vamos a crear tu pedido',
         '',
-        'Antes de continuar, por favor indícanos tu tipo de cliente 👇🐔',
+        'Antes de continuar, por favor indícanos tu tipo de cliente:',
       ].join('\n'),
       buttons: [
         { body: '🏠 Hogar' },
         { body: '💼 Negocios' },
-        { body: '📍 Encuéntranos - Almacenes Avellano' },
+        { body: '📍 Encuéntranos' },
       ],
     },
   ])
