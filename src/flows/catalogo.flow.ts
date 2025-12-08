@@ -56,7 +56,7 @@ function obtenerCoordinador(tipoCliente: string, ciudad?: string): { nombre: str
   if (tipoCliente === 'restaurante_premium') {
     return { nombre: 'Ejecutivo Horecas', telefono: '573138479027' }
   }
-  
+
   const municipiosMeta = [
     'acacías', 'acacias', 'barranca de upía', 'barranca de upia', 
     'guamal', 'san martín', 'san martin', 'cubarral', 'granada',
@@ -67,6 +67,11 @@ function obtenerCoordinador(tipoCliente: string, ciudad?: string): { nombre: str
   ]
   
   const esMunicipio = municipiosMeta.some(m => ciudadNorm.includes(m))
+  
+  // Hogar siempre va a Coordinador de Masivos
+  if (tipoCliente === 'hogar') {
+    return { nombre: 'Coordinador de Masivos', telefono: '573232747647' }
+  }
   
   if (esMunicipio) {
     return { nombre: 'Coordinador de Masivos', telefono: '573232747647' }
@@ -470,6 +475,4 @@ export const consultarPedidoFlow = addKeyword<Provider, Database>([
       ]
     }
   ])
-  
-  return endFlow()
 })
