@@ -294,7 +294,7 @@ export async function finalizarPedido(ctx: any, state: any, flowDynamic: any, ti
   
   try {
     await nuevoPedido.save()
-    console.log(`✅ Pedido guardado en BD: ${idPedido} - Usuario: ${user} - Total: $${total}`)
+    console.log(`✅ Pedido guardado en BD: ${idPedido} - Total: $${total}`)
     
     // Guardar también en el historial de conversaciones
     await Conversacion.findOneAndUpdate(

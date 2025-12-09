@@ -842,17 +842,9 @@ app.get('/api/pedidos', verificarToken, async (req: AuthRequest, res) => {
   try {
     let pedidos = []
     
-    console.log('📋 Cargando pedidos para usuario:', {
-      rol: req.user!.rol,
-      tipoOperador: req.user!.tipoOperador,
-      filtroTelefono: req.query.telefono
-    })
-    
     // Si se proporciona un teléfono específico, filtrar solo por ese
     if (req.query.telefono) {
       pedidos = await Pedido.find({ telefono: req.query.telefono }).sort({ fechaPedido: -1 }).lean()
-      // Log seguro - solo cantidad
-      console.log('📞 Consulta de pedidos por teléfono: encontrados', pedidos.length)
       
       return res.json({
         success: true,
@@ -869,14 +861,10 @@ app.get('/api/pedidos', verificarToken, async (req: AuthRequest, res) => {
         { telefono: 1 }
       ).lean()
       
-      // Log seguro - solo cantidades
-      console.log('👥 Filtrado de pedidos para operador - Clientes asignados:', clientesAsignados.length)
-      
       const telefonos = clientesAsignados.map(c => c.telefono)
       
       // Si no hay clientes asignados, retornar array vacío
       if (telefonos.length === 0) {
-        console.log('⚠️ Operador sin clientes asignados')
         return res.json({
           success: true,
           total: 0,
@@ -886,11 +874,9 @@ app.get('/api/pedidos', verificarToken, async (req: AuthRequest, res) => {
       
       // Filtrar pedidos solo de esos clientes
       pedidos = await Pedido.find({ telefono: { $in: telefonos } }).sort({ fechaPedido: -1 }).lean()
-      console.log('📦 Pedidos filtrados encontrados:', pedidos.length)
     } else {
       // Administrador y soporte ven todos los pedidos
       pedidos = await Pedido.find({}).sort({ fechaPedido: -1 }).lean()
-      console.log('📦 Pedidos totales:', pedidos.length)
     }
     
     res.json({
@@ -1245,10 +1231,8 @@ app.post('/api/eventos', verificarToken, permisoEscritura, upload.single('imagen
   try {
     const { nombre, mensaje, filtros } = req.body
     
-    console.log('📝 Datos recibidos:', { nombre, mensaje, filtros, hasFile: !!req.file })
-    
     if (!nombre || !mensaje || !filtros) {
-      console.error('❌ Faltan campos:', { nombre: !!nombre, mensaje: !!mensaje, filtros: !!filtros })
+      console.error('❌ Error: Faltan campos requeridos en evento')
       return res.status(400).json({
         success: false,
         message: 'Faltan campos requeridos',
@@ -1279,6 +1263,13 @@ app.post('/api/eventos', verificarToken, permisoEscritura, upload.single('imagen
     
     const clientes = await Cliente.find(queryClientes).select('telefono nombreNegocio ciudad tipoCliente')
     
+    if (clientes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No hay destinatarios que cumplan los filtros seleccionados',
+      })
+    }
+    
     // Crear lista de destinatarios
     const destinatarios = clientes.map(cliente => ({
       telefono: cliente.telefono,
@@ -1299,41 +1290,110 @@ app.post('/api/eventos', verificarToken, permisoEscritura, upload.single('imagen
         fallidos: 0,
         lista: destinatarios,
       },
-      estado: 'enviado', // Marcar como enviado inmediatamente
+      estado: 'enviando',
       creadoPor: req.user!.email,
-      fechaEnvio: new Date(),
     })
     
     await evento.save()
     
-    // TODO: Aquí se integraría con el bot de WhatsApp para enviar mensajes
-    // Por ahora, marcar todos como enviados
-    console.log(`📧 Evento creado: ${nombre}`)
-    console.log(`📊 Total destinatarios: ${destinatarios.length}`)
-    console.log(`📝 Mensaje: ${mensaje.substring(0, 50)}...`)
+    console.log(`📧 Iniciando envío de evento: ${nombre} a ${destinatarios.length} destinatarios`)
     
-    // Simular envío marcando como enviados
-    evento.destinatarios.lista.forEach((dest: any) => {
-      dest.enviado = true
-      dest.fechaEnvio = new Date()
-    })
-    evento.destinatarios.enviados = destinatarios.length
+    // ============================================
+    // ✅ ENVIAR MENSAJES REALES VÍA WHATSAPP BUSINESS API
+    // ============================================
+    const JWT_TOKEN = process.env.JWT_TOKEN
+    const NUMBER_ID = process.env.NUMBER_ID
+    const VERSION = process.env.PROVIDER_VERSION || 'v21.0'
+    
+    if (!JWT_TOKEN || !NUMBER_ID) {
+      console.error('❌ Faltan credenciales de WhatsApp Business API')
+      evento.estado = 'error'
+      await evento.save()
+      return res.status(500).json({
+        success: false,
+        message: 'Error de configuración: Faltan credenciales de WhatsApp',
+      })
+    }
+    
+    let enviados = 0
+    let fallidos = 0
+    
+    // Enviar a cada destinatario
+    for (let i = 0; i < evento.destinatarios.lista.length; i++) {
+      const destinatario = evento.destinatarios.lista[i]
+      
+      try {
+        // Limpiar teléfono (solo números)
+        const telefonoLimpio = destinatario.telefono.replace(/\D/g, '')
+        
+        const response = await fetch(
+          `https://graph.facebook.com/${VERSION}/${NUMBER_ID}/messages`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${JWT_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messaging_product: 'whatsapp',
+              to: telefonoLimpio,
+              type: 'text',
+              text: {
+                body: mensaje
+              }
+            })
+          }
+        )
+        
+        const responseData = await response.json()
+        
+        if (response.ok) {
+          destinatario.enviado = true
+          destinatario.fechaEnvio = new Date()
+          enviados++
+          console.log(`✅ [${i + 1}/${destinatarios.length}] Mensaje enviado exitosamente`)
+        } else {
+          destinatario.error = responseData.error?.message || 'Error desconocido'
+          fallidos++
+          console.error(`❌ [${i + 1}/${destinatarios.length}] Error en envío:`, responseData.error?.message)
+        }
+        
+        // Esperar 1.2 segundos entre cada mensaje para evitar rate limiting
+        if (i < destinatarios.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1200))
+        }
+        
+      } catch (error) {
+        destinatario.error = error instanceof Error ? error.message : 'Error de red'
+        fallidos++
+        console.error(`❌ [${i + 1}/${destinatarios.length}] Excepción al enviar:`, error)
+      }
+    }
+    
+    // Actualizar evento con resultados finales
+    evento.destinatarios.enviados = enviados
+    evento.destinatarios.fallidos = fallidos
+    evento.estado = 'enviado'
+    evento.fechaEnvio = new Date()
     await evento.save()
+    
+    console.log(`✅ Evento completado: ${enviados} enviados, ${fallidos} fallidos`)
     
     res.json({
       success: true,
-      message: 'Evento creado exitosamente',
+      message: 'Evento procesado exitosamente',
       data: {
         _id: evento._id,
         nombre: evento.nombre,
         destinatarios: {
           total: evento.destinatarios.total,
           enviados: evento.destinatarios.enviados,
+          fallidos: evento.destinatarios.fallidos,
         },
       },
     })
   } catch (error) {
-    console.error('Error creando evento:', error)
+    console.error('❌ Error creando evento:', error)
     res.status(500).json({
       success: false,
       message: 'Error creando evento',

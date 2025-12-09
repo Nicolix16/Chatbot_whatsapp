@@ -76,9 +76,8 @@ async function guardarDatosNegocio(ctx: any, state: any, flowDynamic: any, tipoN
   const user = ctx.from
   const datosNegocio = ctx.body
   
-  console.log(`📝 Guardando datos de negocio para: ${user}`)
+  console.log('📝 Guardando datos de negocio')
   console.log(`📝 Tipo: ${tipoNegocio}`)
-  console.log(`📝 Datos: ${datosNegocio}`)
   
   try {
     // Extraer datos del mensaje
@@ -401,7 +400,7 @@ export const verCatalogoFlow = addKeyword<Provider, Database>([
   const myState = state.getMyState()
   const tipoNegocio = myState.tipoNegocio
   
-  console.log(`[verCatalogoFlow] Iniciado por usuario: ${user}`)
+  console.log('[verCatalogoFlow] Iniciando flujo de catálogo')
   console.log(`[verCatalogoFlow] Tipo de negocio: ${tipoNegocio}`)
   
   if (!tipoNegocio) {
