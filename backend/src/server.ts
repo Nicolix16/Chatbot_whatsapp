@@ -44,7 +44,8 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcAttr: ["'unsafe-inline'"], // ⚠️ Permite onclick, onchange, etc.
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
@@ -1710,13 +1711,16 @@ app.get('/api/powerbi/conversaciones', exportLimiter, verificarToken, async (req
     const datosFormateados = conversaciones.map(conv => ({
       id: conv._id.toString(),
       telefono: conv.telefono,
-      nombreCliente: conv.nombreCliente || 'Sin nombre',
-      tipoCliente: conv.tipoCliente || 'Sin tipo',
-      ultimoMensaje: conv.ultimoMensaje || '',
+      nombreCliente: conv.nombreCliente || conv.nombreNegocio || 'Sin nombre',
+      nombreNegocio: conv.nombreNegocio || '',
+      ultimoMensaje: conv.mensajes && conv.mensajes.length > 0 
+        ? conv.mensajes[conv.mensajes.length - 1].mensaje 
+        : '',
       totalMensajes: conv.mensajes?.length || 0,
-      estado: conv.estado || 'activa',
+      flujoActual: conv.flujoActual || 'sin_flujo',
       fechaInicio: conv.fechaInicio,
-      ultimaActividad: conv.ultimaActividad
+      fechaUltimoMensaje: conv.fechaUltimoMensaje,
+      totalInteracciones: conv.interaccionesImportantes?.length || 0
     }))
     
     res.json({
