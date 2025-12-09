@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Avellano Chatbot</title>
+    <link rel="stylesheet" href="/css/styles-sidebar.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="sidebar-logo">
+                    <img src="/assets/images/LOGO_AVELLANO.png" alt="Logo Avellano">
+                </div>
+                <h2 class="sidebar-title">Avellano</h2>
+            </div>
+
+            <div class="user-card">
+                <div class="user-avatar" id="user-avatar">A</div>
+                <div class="user-details">
+                    <h3 class="user-card-name" id="user-card-name">Usuario</h3>
+                    <p class="user-card-email" id="user-card-email">usuario@avellano.com</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" onclick="switchTab('clientes'); selectNav(this)">
+                    <span class="nav-icon">■</span>
+                    <span class="nav-label">Clientes</span>
+                </button>
+                <button class="nav-item" id="nav-pedidos" onclick="switchTab('pedidos'); selectNav(this)">
+                    <span class="nav-icon">◆</span>
+                    <span class="nav-label">Pedidos</span>
+                </button>
+                <button class="nav-item" id="nav-conversaciones" onclick="switchTab('conversaciones'); selectNav(this)">
+                    <span class="nav-icon">●</span>
+                    <span class="nav-label">Conversaciones</span>
+                </button>
+                <button class="nav-item" id="nav-eventos" onclick="switchTab('eventos'); selectNav(this)" style="display:none">
+                    <span class="nav-icon">◉</span>
+                    <span class="nav-label">Eventos</span>
+                </button>
+                <button class="nav-item" id="nav-usuarios" onclick="switchTab('usuarios'); selectNav(this)" style="display:none">
+                    <span class="nav-icon">▲</span>
+                    <span class="nav-label">Usuarios</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-actions">
+                <button class="action-btn refresh-btn" onclick="loadAll()" title="Actualizar datos">
+                    <span>↻</span> Actualizar
+                </button>
+                <button class="action-btn logout-btn" onclick="logout()" title="Cerrar sesión">
+                    <span>⤳</span> Salir
+                </button>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="role-badge" id="role-badge">VISITANTE</div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="top-header">
+                <h1 id="page-title">Clientes</h1>
+                <div class="header-right">
+                    <span class="user-greeting" id="user-greeting">Bienvenido</span>
+                    <div class="export-dropdown">
+                        <button class="export-btn" onclick="toggleExportMenu()">
+                            <span class="export-icon">⬇</span>
+                            <span>Exportar Datos</span>
+                        </button>
+                        <div class="export-menu" id="exportMenu">
+                            <div class="export-menu-header">📊 Exportar para Power BI</div>
+                            <button class="export-menu-item" onclick="exportarDatos('clientes')">
+                                <span class="export-menu-icon">■</span>
+                                <div class="export-menu-text">
+                                    <div class="export-menu-title">Clientes</div>
+                                    <div class="export-menu-desc">Lista completa de clientes</div>
+                                </div>
+                            </button>
+                            <button class="export-menu-item" onclick="exportarDatos('pedidos')">
+                                <span class="export-menu-icon">◆</span>
+                                <div class="export-menu-text">
+                                    <div class="export-menu-title">Pedidos</div>
+                                    <div class="export-menu-desc">Histórico de pedidos</div>
+                                </div>
+                            </button>
+                            <button class="export-menu-item" onclick="exportarDatos('conversaciones')">
+                                <span class="export-menu-icon">●</span>
+                                <div class="export-menu-text">
+                                    <div class="export-menu-title">Conversaciones</div>
+                                    <div class="export-menu-desc">Registro de interacciones</div>
+                                </div>
+                            </button>
+                            <button class="export-menu-item" onclick="exportarDatos('estadisticas')">
+                                <span class="export-menu-icon">📈</span>
+                                <div class="export-menu-text">
+                                    <div class="export-menu-title">Estadísticas</div>
+                                    <div class="export-menu-desc">Resumen general</div>
+                                </div>
+                            </button>
+                            <button class="export-menu-item" onclick="exportarDatos('todos')">
+                                <span class="export-menu-icon">📦</span>
+                                <div class="export-menu-text">
+                                    <div class="export-menu-title">Exportar Todo</div>
+                                    <div class="export-menu-desc">Todos los datos en ZIP</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Tab Clientes -->
+                <div id="clientes-tab" class="tab-content active">
+                    <div class="content-header">
+                        <h2>Lista de Clientes</h2>
+                    </div>
+                    
+                    <!-- Estadísticas de Clientes -->
+                    <div class="stats-grid">
+                        <div class="stat-card filtro-card active" onclick="filtrarClientesPorTipo('todos')" data-tipo="todos">
+                            <div class="stat-value" id="totalClientes">-</div>
+                            <div class="stat-label">Total de Clientes</div>
+                        </div>
+                        <div class="stat-card filtro-card filtro-hogar" onclick="filtrarClientesPorTipo('hogar')" data-tipo="hogar">
+                            <div class="stat-value" id="clientesHogar">-</div>
+                            <div class="stat-label">Clientes Residenciales</div>
+                        </div>
+                        <div class="stat-card filtro-card filtro-negocio" onclick="filtrarClientesPorTipo('negocio')" data-tipo="negocio">
+                            <div class="stat-value" id="clientesNegocio">-</div>
+                            <div class="stat-label">Clientes Comerciales</div>
+                        </div>
+                        <div class="stat-card filtro-card filtro-nuevos" onclick="filtrarClientesPorTipo('hoy')" data-tipo="hoy">
+                            <div class="stat-value" id="clientesHoy">-</div>
+                            <div class="stat-label">Nuevos Registros</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de búsqueda y filtros para Clientes -->
+                    <div class="search-filter-bar">
+                        <div class="search-box-enhanced">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchClientes" placeholder="Buscar por teléfono, nombre o ciudad..." oninput="buscarClientes()">
+                        </div>
+                    </div>
+                    
+                    <div id="clientes-content" class="loading">Cargando...</div>
+                </div>
+
+                <!-- Tab Pedidos -->
+                <div id="pedidos-tab" class="tab-content">
+                    <div class="content-header">
+                        <h2>Lista de Pedidos</h2>
+                    </div>
+                    
+                    <!-- Cards de filtro de pedidos -->
+                    <div class="stats-grid" id="pedidos-stats">
+                        <div class="stat-card filtro-card active" onclick="filtrarPedidosPorEstado('todos')" data-estado="todos">
+                            <h3 id="totalPedidos">0</h3>
+                            <p>Todos los Pedidos</p>
+                        </div>
+                        <div class="stat-card filtro-card filtro-pendiente" onclick="filtrarPedidosPorEstado('pendiente')" data-estado="pendiente">
+                            <h3 id="pedidosPendientes">0</h3>
+                            <p>Pedidos Pendientes</p>
+                        </div>
+                        <div class="stat-card filtro-card filtro-proceso" onclick="filtrarPedidosPorEstado('en_proceso')" data-estado="en_proceso">
+                            <h3 id="pedidosEnProceso">0</h3>
+                            <p>Pedidos en Proceso</p>
+                        </div>
+                        <div class="stat-card filtro-card filtro-atendido" onclick="filtrarPedidosPorEstado('atendido')" data-estado="atendido">
+                            <h3 id="pedidosAtendidos">0</h3>
+                            <p>Pedidos Atendidos</p>
+                        </div>
+                        <div class="stat-card filtro-card filtro-cancelado" onclick="filtrarPedidosPorEstado('cancelado')" data-estado="cancelado">
+                            <h3 id="pedidosCancelados">0</h3>
+                            <p>Pedidos Cancelados</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de búsqueda y filtros para Pedidos -->
+                    <div class="search-filter-bar">
+                        <div class="search-box-enhanced">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchPedidos" placeholder="Buscar por ID, cliente o productos..." oninput="buscarPedidos()">
+                        </div>
+                        <div class="filters-inline">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" id="filtroPedidoMonto" onchange="aplicarFiltrosPedidos()">
+                                <span>Mayor monto</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" id="filtroPedidoCiudad" onchange="aplicarFiltrosPedidos()">
+                                <span>Agrupar por ciudad</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="pedidos-content" class="loading">Cargando...</div>
+                </div>
+
+                <!-- Tab Conversaciones -->
+                <div id="conversaciones-tab" class="tab-content">
+                    <div class="content-header">
+                        <h2>Historial de Conversaciones</h2>
+                    </div>
+                    
+                    <!-- Barra de búsqueda y filtros para Conversaciones -->
+                    <div class="search-filter-bar">
+                        <div class="search-box-enhanced">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchConversaciones" placeholder="Buscar por nombre, teléfono o tipo de cliente..." oninput="buscarConversaciones()">
+                        </div>
+                        <div class="filters-inline">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" id="filtroConvActividad" onchange="aplicarFiltrosConversaciones()">
+                                <span>Más activos</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" id="filtroConvMensajes" onchange="aplicarFiltrosConversaciones()">
+                                <span>Más mensajes</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="conversaciones-content" class="loading">Cargando...</div>
+                </div>
+
+                <!-- Tab Eventos -->
+                <div id="eventos-tab" class="tab-content">
+                    <div class="content-header">
+                        <h2>Gestión de Eventos</h2>
+                        <button class="btn-primary" onclick="mostrarFormularioEvento()">+ Crear Evento</button>
+                    </div>
+
+                    <!-- Formulario para crear/editar evento -->
+                    <div id="form-evento" class="form-evento" style="display: none;">
+                        <div class="form-card">
+                            <div class="form-header">
+                                <h3 id="form-evento-titulo">Crear Nuevo Evento</h3>
+                                <button class="btn-close" onclick="cerrarFormularioEvento()">✕</button>
+                            </div>
+                            
+                            <div class="form-body">
+                                <div class="form-group">
+                                    <label for="evento-nombre">Nombre del Evento *</label>
+                                    <input type="text" id="evento-nombre" placeholder="Ej: Promoción Navideña 2025" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="evento-mensaje">Mensaje *</label>
+                                    <textarea id="evento-mensaje" rows="4" placeholder="Escribe el mensaje que se enviará a los clientes..." required></textarea>
+                                    <small>Puedes usar emojis y saltos de línea</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="evento-imagen">Imagen (Opcional)</label>
+                                    <input type="file" id="evento-imagen" accept="image/*" onchange="previewImagen(event)">
+                                    <div id="preview-imagen" class="preview-imagen"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Destinatarios *</label>
+                                    <div class="destinatarios-options">
+                                        <div class="radio-group">
+                                            <input type="radio" id="dest-todos" name="destinatario" value="todos" checked onchange="actualizarDestinatarios()">
+                                            <label for="dest-todos">📢 Todos los clientes</label>
+                                        </div>
+                                        <div class="radio-group">
+                                            <input type="radio" id="dest-hogar" name="destinatario" value="hogar" onchange="actualizarDestinatarios()">
+                                            <label for="dest-hogar">🏠 Clientes Hogar</label>
+                                        </div>
+                                        <div class="radio-group">
+                                            <input type="radio" id="dest-ciudad" name="destinatario" value="ciudad" onchange="actualizarDestinatarios()">
+                                            <label for="dest-ciudad">📍 Por Ciudad</label>
+                                        </div>
+                                        <div class="radio-group">
+                                            <input type="radio" id="dest-tipo" name="destinatario" value="tipo" onchange="actualizarDestinatarios()">
+                                            <label for="dest-tipo">🏢 Por Tipo de Negocio</label>
+                                        </div>
+                                        <div class="radio-group">
+                                            <input type="radio" id="dest-personalizado" name="destinatario" value="personalizado" onchange="actualizarDestinatarios()">
+                                            <label for="dest-personalizado">🎯 Personalizado</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Selectores según tipo de destinatario -->
+                                <div id="selector-ciudad" class="form-group" style="display: none;">
+                                    <label>Seleccionar Ciudades (marca todas las que quieras)</label>
+                                    <div class="checkbox-grid">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="ciudad-checkbox" value="Villavicencio" onchange="actualizarDestinatarios()">
+                                            <span>Villavicencio</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="ciudad-checkbox" value="Acacías" onchange="actualizarDestinatarios()">
+                                            <span>Acacías</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="ciudad-checkbox" value="Granada" onchange="actualizarDestinatarios()">
+                                            <span>Granada</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="ciudad-checkbox" value="San Martín" onchange="actualizarDestinatarios()">
+                                            <span>San Martín</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="ciudad-checkbox" value="Puerto López" onchange="actualizarDestinatarios()">
+                                            <span>Puerto López</span>
+                                        </label>
+                                    </div>
+                                    <button type="button" class="btn-select-all" onclick="seleccionarTodasCiudades()">Seleccionar todas</button>
+                                </div>
+
+                                <div id="selector-tipo" class="form-group" style="display: none;">
+                                    <label>Seleccionar Tipos de Negocio (marca todos los que quieras)</label>
+                                    <div class="checkbox-grid">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="tipo-checkbox" value="tienda" onchange="actualizarDestinatarios()">
+                                            <span>🏪 Tiendas</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="tipo-checkbox" value="asadero" onchange="actualizarDestinatarios()">
+                                            <span>🍗 Asaderos</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="tipo-checkbox" value="restaurante_estandar" onchange="actualizarDestinatarios()">
+                                            <span>🍽️ Restaurantes Estándar</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="tipo-checkbox" value="restaurante_premium" onchange="actualizarDestinatarios()">
+                                            <span>⭐ Restaurantes Premium</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" class="tipo-checkbox" value="mayorista" onchange="actualizarDestinatarios()">
+                                            <span>📦 Mayoristas</span>
+                                        </label>
+                                    </div>
+                                    <button type="button" class="btn-select-all" onclick="seleccionarTodosTipos()">Seleccionar todos</button>
+                                </div>
+
+                                <div id="selector-personalizado" class="form-group" style="display: none;">
+                                    <label>Filtros Combinados (selecciona múltiples opciones)</label>
+                                    <div class="filtros-combinados-checkbox">
+                                        <div class="filtro-section">
+                                            <label class="section-title">Ciudades:</label>
+                                            <div class="checkbox-grid">
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-ciudad-checkbox" value="Villavicencio" onchange="actualizarDestinatarios()">
+                                                    <span>Villavicencio</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-ciudad-checkbox" value="Acacías" onchange="actualizarDestinatarios()">
+                                                    <span>Acacías</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-ciudad-checkbox" value="Granada" onchange="actualizarDestinatarios()">
+                                                    <span>Granada</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-ciudad-checkbox" value="San Martín" onchange="actualizarDestinatarios()">
+                                                    <span>San Martín</span>
+                                                </label>
+                                            </div>
+                                            <button type="button" class="btn-select-all-small" onclick="seleccionarTodasCiudadesPersonalizado()">Todas</button>
+                                        </div>
+                                        <div class="filtro-section">
+                                            <label class="section-title">Tipos de Negocio:</label>
+                                            <div class="checkbox-grid">
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-tipo-checkbox" value="hogar" onchange="actualizarDestinatarios()">
+                                                    <span>🏠 Hogar</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-tipo-checkbox" value="tienda" onchange="actualizarDestinatarios()">
+                                                    <span>🏪 Tiendas</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-tipo-checkbox" value="asadero" onchange="actualizarDestinatarios()">
+                                                    <span>🍗 Asaderos</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-tipo-checkbox" value="restaurante_estandar" onchange="actualizarDestinatarios()">
+                                                    <span>🍽️ Rest. Estándar</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-tipo-checkbox" value="restaurante_premium" onchange="actualizarDestinatarios()">
+                                                    <span>⭐ Rest. Premium</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" class="filtro-tipo-checkbox" value="mayorista" onchange="actualizarDestinatarios()">
+                                                    <span>📦 Mayoristas</span>
+                                                </label>
+                                            </div>
+                                            <button type="button" class="btn-select-all-small" onclick="seleccionarTodosTiposPersonalizado()">Todos</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="destinatarios-count">
+                                    <span id="count-destinatarios">0 destinatarios seleccionados</span>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn-secondary" onclick="cerrarFormularioEvento()">Cancelar</button>
+                                    <button class="btn-primary" onclick="guardarEvento()">Guardar y Enviar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de eventos -->
+                    <div class="search-filter-bar">
+                        <div class="search-box-enhanced">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchEventos" placeholder="Buscar eventos..." oninput="buscarEventos()">
+                        </div>
+                    </div>
+                    
+                    <div id="eventos-content" class="loading">Cargando eventos...</div>
+                </div>
+
+                <!-- Tab Usuarios (Solo Admin) -->
+                <div id="usuarios-tab" class="tab-content">
+                    <div class="content-header">
+                        <h2>Gestión de Usuarios</h2>
+                        <button class="btn-primary" onclick="mostrarModalAgregarUsuario()">+ Agregar Usuario</button>
+                    </div>
+                    
+                    <!-- Barra de búsqueda para Usuarios -->
+                    <div class="search-filter-bar">
+                        <div class="search-box-enhanced">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchUsuarios" placeholder="Buscar por nombre, email o rol..." oninput="buscarUsuarios()">
+                        </div>
+                    </div>
+                    
+                    <div id="usuarios-content" class="loading">Cargando...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para ver detalle de conversación -->
+    <div id="modalConversacion" class="modal-conversacion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Conversación</h2>
+                <button class="modal-close" onclick="cerrarModalConversacion()">✕ Cerrar</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar usuarios -->
+    <div id="modalAgregarUsuario" class="form-evento" style="display: none;">
+        <div class="form-card" style="max-width: 800px;">
+            <div class="form-header">
+                <h3>Agregar Nuevos Usuarios</h3>
+                <button class="btn-close" onclick="cerrarModalAgregarUsuario()">✕</button>
+            </div>
+            
+            <div class="form-body">
+                <!-- Selector de método -->
+                <div class="metodo-selector">
+                    <button class="metodo-btn active" id="btn-individual" onclick="cambiarMetodo('individual')">
+                        <span class="metodo-icon">👤</span>
+                        <span>Individual</span>
+                    </button>
+                    <button class="metodo-btn" id="btn-csv" onclick="cambiarMetodo('csv')">
+                        <span class="metodo-icon">📄</span>
+                        <span>Importar CSV</span>
+                    </button>
+                </div>
+
+                <!-- Formulario Individual -->
+                <div id="form-individual" class="metodo-content">
+                    <div class="form-group">
+                        <label for="nuevo-nombre">Nombre Completo *</label>
+                        <input type="text" id="nuevo-nombre" placeholder="Ej: Juan Pérez" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nuevo-email">Email *</label>
+                        <input type="email" id="nuevo-email" placeholder="Ej: juan@avellano.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nuevo-password">Contraseña *</label>
+                        <input type="password" id="nuevo-password" placeholder="Mínimo 6 caracteres" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nuevo-rol">Rol *</label>
+                        <select id="nuevo-rol" required onchange="mostrarTipoOperador()">
+                            <option value="">Selecciona un rol...</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="mayorista">Mayorista</option>
+                            <option value="director_comercial">Director Comercial</option>
+                            <option value="coordinador_masivos">Coordinador de Masivos</option>
+                            <option value="ejecutivo_horecas">Ejecutivo Horecas</option>
+                            <option value="soporte">Soporte</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-secondary" onclick="cerrarModalAgregarUsuario()">Cancelar</button>
+                        <button class="btn-primary" onclick="guardarUsuarioIndividual()">Crear Usuario</button>
+                    </div>
+                </div>
+
+                <!-- Formulario CSV -->
+                <div id="form-csv" class="metodo-content" style="display: none;">
+                    <div class="csv-info">
+                        <h4>📋 Formato del archivo CSV</h4>
+                        <p>El archivo debe contener las siguientes columnas en este orden:</p>
+                        <code>nombre,email,password,rol</code>
+                        <br><br>
+                        <strong>Roles válidos:</strong>
+                        <ul>
+                            <li><code>administrador</code></li>
+                            <li><code>mayorista</code></li>
+                            <li><code>director_comercial</code></li>
+                            <li><code>coordinador_masivos</code></li>
+                            <li><code>ejecutivo_horecas</code></li>
+                            <li><code>soporte</code></li>
+                        </ul>
+                        <br>
+                        <strong>Ejemplo:</strong>
+                        <pre>nombre,email,password,rol
+Juan Pérez,juan@avellano.com,password123,mayorista
+María López,maria@avellano.com,password456,soporte</pre>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="archivo-csv">Seleccionar archivo CSV *</label>
+                        <input type="file" id="archivo-csv" accept=".csv" onchange="previewCSV(event)">
+                    </div>
+
+                    <div id="preview-csv" class="csv-preview"></div>
+
+                    <div class="form-actions">
+                        <button class="btn-secondary" onclick="cerrarModalAgregarUsuario()">Cancelar</button>
+                        <button class="btn-primary" onclick="importarUsuariosCSV()">Importar Usuarios</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/utils/helpers.js"></script>
+    <script src="/js/utils/auth.js"></script>
+    <script src="/js/utils/api.js"></script>
+    <script>
+        function selectNav(element) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // Cargar script con cache busting
+        const script = document.createElement('script');
+        script.src = '/js/app.js?v=' + Date.now();
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>

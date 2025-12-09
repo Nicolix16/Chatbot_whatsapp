@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: avellano-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - avellano-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: avellano-backend
+    restart: always
+    ports:
+      - "3008:3008"  # Bot WhatsApp
+      - "3009:3009"  # API REST
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://admin:password@mongodb:27017/avellano-chatbot?authSource=admin
+      - PORT=3008
+      - API_PORT=3009
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - avellano-network
+
+networks:
+  avellano-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
