@@ -11,6 +11,8 @@ export interface IUsuario extends Document {
   refreshToken?: string
   activo: boolean
   nombre?: string
+  resetPasswordToken?: string
+  resetPasswordExpires?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -32,6 +34,8 @@ const UsuarioSchema: Schema<IUsuario> = new Schema({
   refreshToken: { type: String },
   activo: { type: Boolean, default: true },
   nombre: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 })

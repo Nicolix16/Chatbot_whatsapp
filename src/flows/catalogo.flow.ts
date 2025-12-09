@@ -285,6 +285,11 @@ export async function finalizarPedido(ctx: any, state: any, flowDynamic: any, ti
     telefonoCoordinador: coordinador.telefono,
     estado: 'pendiente',
     fechaPedido: new Date(),
+    historialEstados: [{
+      estado: 'pendiente',
+      fecha: new Date(),
+      nota: 'Pedido recibido desde el chatbot'
+    }]
   })
   
   try {

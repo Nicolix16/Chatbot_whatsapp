@@ -1,47 +1,15 @@
-import mongoose, { Schema, Document } from 'mongoose'
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-export interface IProductoPedido {
-  nombre: string
-  cantidad: number
-  precioUnitario: number
-  subtotal: number
-}
-
-export interface IHistorialEstado {
-  estado: 'pendiente' | 'en_proceso' | 'atendido' | 'cancelado'
-  fecha: Date
-  operadorEmail?: string
-  operadorId?: string
-  nota?: string
-}
-
-export interface IPedido extends Document {
-  idPedido: string
-  telefono: string
-  tipoCliente: string
-  nombreNegocio?: string
-  ciudad?: string
-  direccion?: string
-  personaContacto?: string
-  productos: IProductoPedido[]
-  total: number
-  coordinadorAsignado: string
-  telefonoCoordinador: string
-  estado: 'pendiente' | 'en_proceso' | 'atendido' | 'cancelado'
-  fechaPedido: Date
-  notas?: string
-  notasCancelacion?: string
-  historialEstados: IHistorialEstado[]
-}
-
-const ProductoPedidoSchema = new Schema({
+// Definir el schema
+const ProductoPedidoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   cantidad: { type: Number, required: true },
   precioUnitario: { type: Number, required: true },
   subtotal: { type: Number, required: true },
-}, { _id: false })
+}, { _id: false });
 
-const HistorialEstadoSchema = new Schema({
+const HistorialEstadoSchema = new mongoose.Schema({
   estado: { 
     type: String, 
     enum: ['pendiente', 'en_proceso', 'atendido', 'cancelado'], 
@@ -51,9 +19,9 @@ const HistorialEstadoSchema = new Schema({
   operadorEmail: { type: String },
   operadorId: { type: String },
   nota: { type: String }
-}, { _id: false })
+}, { _id: false });
 
-const PedidoSchema: Schema = new Schema({
+const PedidoSchema = new mongoose.Schema({
   idPedido: { type: String, required: true, unique: true },
   telefono: { type: String, required: true },
   tipoCliente: { type: String, required: true },
@@ -74,11 +42,36 @@ const PedidoSchema: Schema = new Schema({
   notas: { type: String },
   notasCancelacion: { type: String },
   historialEstados: [HistorialEstadoSchema]
-})
+});
 
-// Índices para búsqueda rápida
-PedidoSchema.index({ idPedido: 1 })
-PedidoSchema.index({ telefono: 1 })
-PedidoSchema.index({ fechaPedido: -1 })
+const Pedido = mongoose.model('Pedido', PedidoSchema);
 
-export default mongoose.model<IPedido>('Pedido', PedidoSchema)
+async function testPedido() {
+  try {
+    const mongoUri = process.env.MONGO_URI || '';
+    await mongoose.connect(mongoUri);
+    console.log('✅ Conectado a MongoDB');
+
+    // Buscar el pedido AV-20251208-7518
+    const pedido = await Pedido.findOne({ idPedido: 'AV-20251208-7518' });
+    
+    if (!pedido) {
+      console.log('❌ Pedido no encontrado');
+      process.exit(1);
+    }
+
+    console.log('\n📦 Pedido encontrado:');
+    console.log('ID:', pedido.idPedido);
+    console.log('Estado actual:', pedido.estado);
+    console.log('Historial de estados:');
+    console.log(JSON.stringify(pedido.historialEstados, null, 2));
+    
+    await mongoose.disconnect();
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error:', error);
+    process.exit(1);
+  }
+}
+
+testPedido();

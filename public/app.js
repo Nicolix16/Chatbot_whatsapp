@@ -1,5 +1,9 @@
 const API_URL = 'http://localhost:3009/api'
 
+// Variables globales para filtros de clientes
+let todosClientes = [];
+let tipoFiltroActual = 'todos';
+
 // Verificar autenticación al cargar la página
 function checkAuthentication() {
   const token = localStorage.getItem('access_token')
@@ -80,14 +84,22 @@ function initializeRoleBasedUI() {
   const isOperador = user.rol === 'operador'
   const isAdmin = user.rol === 'administrador'
   
-  // Soporte no ve gestión de usuarios
-  if (isSoporte) {
+  // Operadores no ven eventos ni gestión de usuarios
+  if (isOperador) {
+    document.getElementById('nav-eventos').style.display = 'none'
     document.getElementById('nav-usuarios').style.display = 'none'
   }
   
-  // Solo admin ve gestión de usuarios
+  // Soporte ve eventos pero no gestión de usuarios
+  if (isSoporte) {
+    document.getElementById('nav-usuarios').style.display = 'none'
+    document.getElementById('nav-eventos').style.display = 'flex'
+  }
+  
+  // Admin ve todo
   if (isAdmin) {
     document.getElementById('nav-usuarios').style.display = 'flex'
+    document.getElementById('nav-eventos').style.display = 'flex'
   }
   
   console.log(`👤 Usuario: ${user.nombre} - Rol: ${user.rol}${user.tipoOperador ? ' - Tipo: ' + user.tipoOperador : ''}`)
@@ -192,51 +204,14 @@ async function loadClientes() {
         
         console.log('📊 Clientes cargados:', result.data);
         
-        const container = document.getElementById('clientes-content');
-        const user = getUserData()
-        
         if (result.success && result.data.length > 0) {
-            const responsableMap = {
-                'coordinador_masivos': 'Coord. Masivos',
-                'director_comercial': 'Dir. Comercial',
-                'ejecutivo_horecas': 'Ejec. Horecas',
-                'mayorista': 'Mayorista'
-            };
-            
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Teléfono</th>
-                            <th>Tipo</th>
-                            <th>Nombre Negocio</th>
-                            <th>Ciudad</th>
-                            <th>Responsable</th>
-                            <th>Fecha Registro</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${result.data.map(cliente => {
-                            const responsableTexto = cliente.responsable 
-                                ? responsableMap[cliente.responsable] || cliente.responsable 
-                                : '-';
-                            
-                            return `
-                                <tr class="clickable-row" onclick="verDetalleCliente('${cliente.telefono}')">
-                                    <td>${cliente.telefono || '-'}</td>
-                                    <td><span class="badge badge-${cliente.tipoCliente}">${cliente.tipoCliente.toUpperCase()}</span></td>
-                                    <td>${cliente.nombreNegocio || '-'}</td>
-                                    <td>${cliente.ciudad || '-'}</td>
-                                    <td><span class="badge badge-info">${responsableTexto}</span></td>
-                                    <td>${new Date(cliente.fechaRegistro).toLocaleDateString('es-CO')}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
+            todosClientes = result.data;
+            actualizarEstadisticasClientes();
+            mostrarClientesFiltrados(tipoFiltroActual);
         } else {
-            container.innerHTML = `
+            todosClientes = [];
+            actualizarEstadisticasClientes();
+            document.getElementById('clientes-content').innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📭</div>
                     <p>No hay clientes asignados</p>
@@ -249,6 +224,114 @@ async function loadClientes() {
             '<div class="empty-state"><p>Error cargando datos</p></div>';
     }
 }
+
+// Actualizar estadísticas de clientes
+function actualizarEstadisticasClientes() {
+    const total = todosClientes.length;
+    const hogar = todosClientes.filter(c => c.tipoCliente === 'hogar').length;
+    const negocio = todosClientes.filter(c => c.tipoCliente === 'restaurante_estandar' || c.tipoCliente === 'asadero').length;
+    
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const clientesHoy = todosClientes.filter(c => {
+        const fechaRegistro = new Date(c.fechaRegistro);
+        fechaRegistro.setHours(0, 0, 0, 0);
+        return fechaRegistro.getTime() === hoy.getTime();
+    }).length;
+    
+    document.getElementById('totalClientes').textContent = total;
+    document.getElementById('clientesHogar').textContent = hogar;
+    document.getElementById('clientesNegocio').textContent = negocio;
+    document.getElementById('clientesHoy').textContent = clientesHoy;
+}
+
+// Filtrar clientes por tipo
+function filtrarClientesPorTipo(tipo) {
+    tipoFiltroActual = tipo;
+    
+    // Actualizar clases activas en las cards
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    document.querySelector(`[data-tipo="${tipo}"]`).classList.add('active');
+    
+    mostrarClientesFiltrados(tipo);
+}
+
+// Mostrar clientes filtrados
+function mostrarClientesFiltrados(tipo) {
+    let clientesFiltrados = todosClientes;
+    
+    if (tipo === 'hogar') {
+        clientesFiltrados = todosClientes.filter(c => c.tipoCliente === 'hogar');
+    } else if (tipo === 'negocio') {
+        clientesFiltrados = todosClientes.filter(c => 
+            c.tipoCliente === 'restaurante_estandar' || c.tipoCliente === 'asadero'
+        );
+    } else if (tipo === 'hoy') {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        clientesFiltrados = todosClientes.filter(c => {
+            const fechaRegistro = new Date(c.fechaRegistro);
+            fechaRegistro.setHours(0, 0, 0, 0);
+            return fechaRegistro.getTime() === hoy.getTime();
+        });
+    }
+    
+    const container = document.getElementById('clientes-content');
+    const responsableMap = {
+        'coordinador_masivos': 'Coord. Masivos',
+        'director_comercial': 'Dir. Comercial',
+        'ejecutivo_horecas': 'Ejec. Horecas',
+        'mayorista': 'Mayorista'
+    };
+    
+    if (clientesFiltrados.length > 0) {
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Teléfono</th>
+                        <th>Tipo</th>
+                        <th>Nombre Negocio</th>
+                        <th>Ciudad</th>
+                        <th>Responsable</th>
+                        <th>Fecha Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${clientesFiltrados.map(cliente => {
+                        const responsableTexto = cliente.responsable 
+                            ? responsableMap[cliente.responsable] || cliente.responsable 
+                            : '-';
+                        
+                        return `
+                            <tr class="clickable-row" onclick="verDetalleCliente('${cliente.telefono}')">
+                                <td>${cliente.telefono || '-'}</td>
+                                <td><span class="badge badge-${cliente.tipoCliente}">${cliente.tipoCliente.toUpperCase()}</span></td>
+                                <td>${cliente.nombreNegocio || '-'}</td>
+                                <td>${cliente.ciudad || '-'}</td>
+                                <td><span class="badge badge-info">${responsableTexto}</span></td>
+                                <td>${new Date(cliente.fechaRegistro).toLocaleDateString('es-CO')}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>No hay clientes en esta categoría</p>
+            </div>
+        `;
+    }
+}
+
+// Variable global para almacenar todos los pedidos
+let todosPedidos = [];
+let estadoFiltroActual = 'todos';
 
 // Cargar pedidos
 async function loadPedidos() {
@@ -284,55 +367,19 @@ async function loadPedidos() {
         const result = await response.json();
         console.log('📋 Resultado:', result)
         
-        if (result.success && result.data && result.data.length > 0) {
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID Pedido</th>
-                            <th>Cliente</th>
-                            <th>Productos</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${result.data.map(pedido => {
-                            const productos = Array.isArray(pedido.productos) 
-                                ? pedido.productos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ')
-                                : pedido.productos;
-                            
-                            const estadoClass = {
-                                'pendiente': 'badge-warning',
-                                'en_proceso': 'badge-info',
-                                'atendido': 'badge-success',
-                                'cancelado': 'badge-danger'
-                            }[pedido.estado] || 'badge-secondary';
-                            
-                            const estadoTexto = {
-                                'pendiente': 'PENDIENTE',
-                                'en_proceso': 'EN PROCESO',
-                                'atendido': 'ATENDIDO',
-                                'cancelado': 'CANCELADO'
-                            }[pedido.estado] || pedido.estado.toUpperCase();
-                            
-                            return `
-                                <tr class="clickable-row" onclick="verDetallePedido('${pedido._id}')">
-                                    <td><strong>${pedido.idPedido || 'N/A'}</strong></td>
-                                    <td>${pedido.nombreNegocio || pedido.personaContacto || '-'}</td>
-                                    <td style="max-width: 350px; white-space: normal;">${productos}</td>
-                                    <td><strong>$${(pedido.total || 0).toLocaleString('es-CO')}</strong></td>
-                                    <td><span class="badge ${estadoClass}">${estadoTexto}</span></td>
-                                    <td>${new Date(pedido.fechaPedido).toLocaleDateString('es-CO')}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
+        if (result.success && result.data) {
+            // Guardar todos los pedidos
+            todosPedidos = result.data;
+            
+            // Actualizar estadísticas
+            actualizarEstadisticasPedidos(todosPedidos);
+            
+            // Mostrar pedidos según el filtro actual
+            mostrarPedidosFiltrados(estadoFiltroActual);
         } else {
             console.log('ℹ️ No hay pedidos para mostrar')
+            todosPedidos = [];
+            actualizarEstadisticasPedidos([]);
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📭</div>
@@ -350,6 +397,109 @@ async function loadPedidos() {
         
         container.innerHTML = 
             `<div class="empty-state"><p>❌ ${errorMsg}</p></div>`;
+    }
+}
+
+// Actualizar estadísticas de pedidos
+function actualizarEstadisticasPedidos(pedidos) {
+    const total = pedidos.length;
+    const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+    const enProceso = pedidos.filter(p => p.estado === 'en_proceso').length;
+    const atendidos = pedidos.filter(p => p.estado === 'atendido').length;
+    const cancelados = pedidos.filter(p => p.estado === 'cancelado').length;
+    
+    document.getElementById('totalPedidos').textContent = total;
+    document.getElementById('pedidosPendientes').textContent = pendientes;
+    document.getElementById('pedidosEnProceso').textContent = enProceso;
+    document.getElementById('pedidosAtendidos').textContent = atendidos;
+    document.getElementById('pedidosCancelados').textContent = cancelados;
+}
+
+// Filtrar pedidos por estado
+function filtrarPedidosPorEstado(estado) {
+    estadoFiltroActual = estado;
+    
+    // Actualizar clase active en las cards
+    document.querySelectorAll('.filtro-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    event.target.closest('.filtro-card').classList.add('active');
+    
+    // Mostrar pedidos filtrados
+    mostrarPedidosFiltrados(estado);
+}
+
+// Mostrar pedidos filtrados
+function mostrarPedidosFiltrados(estado) {
+    const container = document.getElementById('pedidos-content');
+    
+    // Filtrar pedidos según el estado
+    let pedidosFiltrados = estado === 'todos' 
+        ? todosPedidos 
+        : todosPedidos.filter(p => p.estado === estado);
+    
+    if (pedidosFiltrados.length > 0) {
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Pedido</th>
+                        <th>Cliente</th>
+                        <th>Productos</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${pedidosFiltrados.map(pedido => {
+                        const productos = Array.isArray(pedido.productos) 
+                            ? pedido.productos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ')
+                            : pedido.productos;
+                        
+                        const estadoClass = {
+                            'pendiente': 'badge-warning',
+                            'en_proceso': 'badge-info',
+                            'atendido': 'badge-success',
+                            'cancelado': 'badge-danger'
+                        }[pedido.estado] || 'badge-secondary';
+                        
+                        const estadoTexto = {
+                            'pendiente': 'PENDIENTE',
+                            'en_proceso': 'EN PROCESO',
+                            'atendido': 'ATENDIDO',
+                            'cancelado': 'CANCELADO'
+                        }[pedido.estado] || pedido.estado.toUpperCase();
+                        
+                        return `
+                            <tr class="clickable-row" onclick="verDetallePedido('${pedido._id}')">
+                                <td><strong>${pedido.idPedido || 'N/A'}</strong></td>
+                                <td>${pedido.nombreNegocio || pedido.personaContacto || '-'}</td>
+                                <td style="max-width: 350px; white-space: normal;">${productos}</td>
+                                <td><strong>$${(pedido.total || 0).toLocaleString('es-CO')}</strong></td>
+                                <td><span class="badge ${estadoClass}">${estadoTexto}</span></td>
+                                <td>${new Date(pedido.fechaPedido).toLocaleDateString('es-CO')}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    } else {
+        const mensajePorEstado = {
+            'todos': 'No hay pedidos registrados',
+            'pendiente': 'No hay pedidos pendientes',
+            'en_proceso': 'No hay pedidos en proceso',
+            'atendido': 'No hay pedidos atendidos',
+            'cancelado': 'No hay pedidos cancelados'
+        };
+        
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>${mensajePorEstado[estado] || 'No hay pedidos'}</p>
+            </div>
+        `;
     }
 }
 
@@ -376,6 +526,16 @@ async function verDetallePedido(pedidoId) {
                 'cancelado': 'CANCELADO'
             }[pedido.estado] || pedido.estado.toUpperCase();
             
+            // Obtener datos del usuario actual
+            const user = getUserData();
+            const tipoOperadorTexto = {
+                'coordinador_masivos': 'Coordinador de Masivos',
+                'director_comercial': 'Director Comercial',
+                'ejecutivo_horecas': 'Ejecutivo de Horecas',
+                'mayorista': 'Asesor de Mayoristas'
+            };
+            const nombreOperador = tipoOperadorTexto[user?.tipoOperador] || 'Asesor Comercial';
+            
             // Determinar acciones disponibles según el estado
             let botonesAccion = '';
             if (pedido.estado === 'pendiente') {
@@ -396,6 +556,26 @@ async function verDetallePedido(pedidoId) {
                     </div>
                 `;
             }
+            
+            // Generar mensaje para el cliente
+            const productosTexto = pedido.productos.map(p => 
+                `- ${p.cantidad} ${p.nombre} ($${p.precioUnitario.toLocaleString('es-CO')} c/u)`
+            ).join('\n');
+            
+            const mensajeParaCliente = `Hola, soy tu asesor de Avellano, más específicamente ${nombreOperador}. Yo seré el encargado de que tu pedido con ID *${pedido.idPedido}* sea entregado correctamente.
+
+📍 *Dirección de entrega:* ${pedido.direccion || 'No especificada'}, ${pedido.ciudad || ''}
+
+📦 *Tu pedido consta de:*
+${productosTexto}
+
+💰 *Total: $${pedido.total.toLocaleString('es-CO')}*
+
+En breve me pondré en contacto contigo para confirmar los detalles y coordinar la entrega. ¡Gracias por tu preferencia! 🐓`;
+
+            const mensajeEncoded = encodeURIComponent(mensajeParaCliente);
+            const telefonoLimpio = pedido.telefono.replace(/\D/g, '');
+            const whatsappLink = `https://wa.me/${telefonoLimpio}?text=${mensajeEncoded}`;
             
             const modalContent = `
                 <div class="pedido-detalle">
@@ -491,6 +671,24 @@ async function verDetallePedido(pedidoId) {
                     </div>
                     ` : ''}
                     
+                    <!-- Mensaje para el Cliente -->
+                    ${pedido.estado === 'en_proceso' ? `
+                    <div class="pedido-section mensaje-cliente-section">
+                        <h3 class="section-title">💬 Mensaje para el Cliente</h3>
+                        <div class="mensaje-container">
+                            <textarea id="mensajeCliente" class="mensaje-textarea" oninput="actualizarLinkWhatsApp('${telefonoLimpio}')">${mensajeParaCliente}</textarea>
+                            <div class="mensaje-botones">
+                                <button class="btn-copiar" onclick="copiarMensaje()">
+                                    📋 Copiar Mensaje
+                                </button>
+                                <a id="whatsappLink" href="${whatsappLink}" target="_blank" class="btn-whatsapp">
+                                    💬 Abrir en WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
                     <!-- Botones de Acción -->
                     ${botonesAccion ? `
                     <div class="pedido-acciones">
@@ -512,11 +710,23 @@ async function verDetallePedido(pedidoId) {
 
 // Tomar pedido (cambiar a "en_proceso")
 async function tomarPedido(pedidoId) {
-    if (!confirm('¿Deseas tomar este pedido? Se cambiará el estado a "En Proceso"')) {
+    if (!confirm('¿Deseas tomar este pedido? Se cambiará el estado a "En Proceso" y se notificará al cliente por WhatsApp')) {
         return;
     }
     
     try {
+        // Primero obtener los datos del pedido
+        const pedidoResponse = await fetchWithAuth(`${API_URL}/pedidos/${pedidoId}`);
+        const pedidoData = await pedidoResponse.json();
+        
+        if (!pedidoData.success) {
+            alert(`❌ Error: ${pedidoData.error}`);
+            return;
+        }
+        
+        const pedido = pedidoData.data;
+        
+        // Actualizar el estado del pedido
         const response = await fetchWithAuth(`${API_URL}/pedidos/${pedidoId}/estado`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -526,7 +736,32 @@ async function tomarPedido(pedidoId) {
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ Pedido tomado exitosamente');
+            // Enviar mensaje de WhatsApp al cliente
+            const mensaje = 'Su pedido ya está siendo atendido por un asesor comercial. En breve se comunicará con usted para confirmar el pedido y realizar el pago del mismo. ¡Gracias por su preferencia! 🐓';
+            
+            try {
+                const whatsappResponse = await fetchWithAuth(`${API_URL}/whatsapp/enviar-mensaje`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telefono: pedido.telefono,
+                        mensaje: mensaje
+                    })
+                });
+                
+                const whatsappResult = await whatsappResponse.json();
+                
+                if (whatsappResult.success) {
+                    alert('✅ Pedido tomado exitosamente y cliente notificado por WhatsApp');
+                } else {
+                    alert('✅ Pedido tomado exitosamente. ⚠️ No se pudo enviar notificación por WhatsApp');
+                    console.error('Error enviando WhatsApp:', whatsappResult.error);
+                }
+            } catch (whatsappError) {
+                console.error('Error enviando mensaje de WhatsApp:', whatsappError);
+                alert('✅ Pedido tomado exitosamente. ⚠️ Error enviando notificación por WhatsApp');
+            }
+            
             cerrarModalConversacion();
             loadPedidos();
         } else {
@@ -641,6 +876,10 @@ async function loadConversaciones() {
     }
 }
 
+// Variable global para almacenar datos de conversación actual
+let conversacionActual = null;
+let seccionActivaConv = 'pedidos';
+
 // Ver detalle de conversación
 async function verDetalleConversacion(telefono) {
     try {
@@ -648,6 +887,7 @@ async function verDetalleConversacion(telefono) {
         const result = await response.json();
         
         if (result.success) {
+            conversacionActual = result.data;
             const conv = result.data;
             const nombreDisplay = conv.nombreNegocio || conv.nombreCliente || telefono;
             
@@ -655,11 +895,20 @@ async function verDetalleConversacion(telefono) {
             document.getElementById('modalTitle').textContent = 
                 `Conversación con ${nombreDisplay}`;
             
+            // Obtener pedidos del cliente
+            const pedidosResponse = await fetchWithAuth(`${API_URL}/pedidos?telefono=${telefono}`);
+            const pedidosData = await pedidosResponse.json();
+            const pedidosCliente = pedidosData.success ? pedidosData.data : [];
+            
             // Separar interacciones importantes
             const interaccionesImportantes = conv.interaccionesImportantes || [];
-            const pedidos = interaccionesImportantes.filter(i => i.tipo === 'pedido');
             const registros = interaccionesImportantes.filter(i => i.tipo === 'registro');
             const contactos = interaccionesImportantes.filter(i => i.tipo === 'contacto_asesor');
+            
+            // Calcular estadísticas de interacciones
+            const totalMensajes = conv.mensajes?.length || 0;
+            const ultimaInteraccion = conv.fechaUltimoMensaje ? 
+                new Date(conv.fechaUltimoMensaje).toLocaleString('es-CO') : 'Sin registro';
             
             // Construir contenido del modal
             let modalContent = `
@@ -668,80 +917,47 @@ async function verDetalleConversacion(telefono) {
                         📊 Resumen de Interacciones
                     </h3>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
-                        <div class="stat-card">
-                            <div class="stat-value">${pedidos.length}</div>
+                        <div class="stat-card filtro-card filtro-pedidos active" onclick="mostrarSeccionConversacion('pedidos')" data-seccion="pedidos" style="cursor: pointer;">
+                            <div class="stat-value">${pedidosCliente.length}</div>
                             <div class="stat-label">Pedidos</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card filtro-card filtro-registros" onclick="mostrarSeccionConversacion('registros')" data-seccion="registros" style="cursor: pointer;">
                             <div class="stat-value">${registros.length}</div>
                             <div class="stat-label">Registros</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card filtro-card filtro-contactos" onclick="mostrarSeccionConversacion('contactos')" data-seccion="contactos" style="cursor: pointer;">
                             <div class="stat-value">${contactos.length}</div>
                             <div class="stat-label">Contactos</div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Contenedor dinámico para las secciones -->
+                <div id="seccion-contenido-conversacion">
             `;
             
-            // Sección de interacciones importantes
-            if (interaccionesImportantes.length > 0) {
-                modalContent += `
-                    <div class="interacciones-importantes">
-                        <h4 style="margin-bottom: 10px; color: var(--avellano-red);">
-                            ⭐ Interacciones Importantes
-                        </h4>
-                `;
-                
-                interaccionesImportantes.forEach(interaccion => {
-                    modalContent += `
-                        <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 8px;">
-                            <span class="interaccion-badge interaccion-${interaccion.tipo}">
-                                ${interaccion.tipo.toUpperCase()}
-                            </span>
-                            <div style="margin-top: 8px; font-size: 13px;">
-                                ${interaccion.contenido}
-                            </div>
-                            <div style="margin-top: 5px; font-size: 11px; color: #999;">
-                                ${new Date(interaccion.timestamp).toLocaleString('es-CO')}
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                modalContent += `</div>`;
-            }
+            // Almacenar datos para uso posterior
+            conversacionActual.pedidosCliente = pedidosCliente;
+            conversacionActual.registros = registros;
+            conversacionActual.contactos = contactos;
+            conversacionActual.totalMensajes = totalMensajes;
+            conversacionActual.ultimaInteraccion = ultimaInteraccion;
             
-            // Timeline de mensajes
+            // Mostrar sección inicial (Pedidos)
+            modalContent += generarSeccionPedidos(pedidosCliente);
+            
             modalContent += `
-                <h4 style="margin-top: 25px; margin-bottom: 15px; color: var(--avellano-red);">
-                    💬 Historial de Conversación
-                </h4>
-                <div class="conversacion-timeline">
+                </div>
+                
+                <!-- Información adicional del cliente -->
+                <div style="margin-top: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h4 style="color: var(--avellano-red); margin-bottom: 10px;">📈 Estadísticas de Interacción</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><strong>Total de mensajes:</strong> ${totalMensajes}</div>
+                        <div><strong>Última interacción:</strong> ${ultimaInteraccion}</div>
+                    </div>
+                </div>
             `;
-            
-            if (conv.mensajes && conv.mensajes.length > 0) {
-                conv.mensajes.forEach(mensaje => {
-                    const clase = mensaje.rol === 'usuario' ? 'mensaje-usuario' : 'mensaje-bot';
-                    const icono = mensaje.rol === 'usuario' ? '👤' : '🤖';
-                    
-                    modalContent += `
-                        <div class="timeline-item">
-                            <div class="mensaje-item ${clase}">
-                                <strong>${icono} ${mensaje.rol === 'usuario' ? 'Cliente' : 'Bot Avellano'}</strong>
-                                <div style="margin-top: 5px;">${mensaje.mensaje}</div>
-                                <div class="mensaje-timestamp">
-                                    ${new Date(mensaje.timestamp).toLocaleString('es-CO')}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                modalContent += '<p style="text-align: center; color: #999;">No hay mensajes registrados</p>';
-            }
-            
-            modalContent += `</div>`;
             
             // Mostrar modal
             document.getElementById('modalBody').innerHTML = modalContent;
@@ -751,6 +967,339 @@ async function verDetalleConversacion(telefono) {
         console.error('Error cargando detalle de conversación:', error);
         alert('❌ Error cargando detalle de conversación');
     }
+}
+
+// Función para cambiar entre secciones en el modal de conversación
+function mostrarSeccionConversacion(seccion) {
+    if (!conversacionActual) return;
+    
+    seccionActivaConv = seccion;
+    
+    // Actualizar clases activas en las cards
+    document.querySelectorAll('[data-seccion]').forEach(card => {
+        card.classList.remove('active');
+    });
+    document.querySelector(`[data-seccion="${seccion}"]`).classList.add('active');
+    
+    // Generar contenido según la sección
+    let contenido = '';
+    if (seccion === 'pedidos') {
+        contenido = generarSeccionPedidos(conversacionActual.pedidosCliente);
+    } else if (seccion === 'registros') {
+        contenido = generarSeccionRegistros(conversacionActual.registros, conversacionActual);
+    } else if (seccion === 'contactos') {
+        contenido = generarSeccionContactos(conversacionActual.contactos);
+    }
+    
+    document.getElementById('seccion-contenido-conversacion').innerHTML = contenido;
+}
+
+// Generar sección de pedidos con historial detallado colapsable
+function generarSeccionPedidos(pedidos) {
+    if (!pedidos || pedidos.length === 0) {
+        return `
+            <div class="empty-state" style="padding: 40px;">
+                <div class="empty-state-icon">📦</div>
+                <p>No hay pedidos registrados para este cliente</p>
+            </div>
+        `;
+    }
+    
+    const estadoMap = {
+        'pendiente': { icon: '⏳', color: '#f59e0b', label: 'Pendiente' },
+        'en_proceso': { icon: '🔄', color: '#3b82f6', label: 'En Proceso' },
+        'atendido': { icon: '✅', color: '#22c55e', label: 'Atendido' },
+        'cancelado': { icon: '❌', color: '#ef4444', label: 'Cancelado' }
+    };
+    
+    let html = `
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: var(--avellano-red); margin-bottom: 15px;">📦 Historial de Pedidos</h4>
+    `;
+    
+    pedidos.forEach((pedido, index) => {
+        const estadoInfo = estadoMap[pedido.estado] || { icon: '❓', color: '#999', label: pedido.estado };
+        const productos = pedido.productos || [];
+        const pedidoId = `pedido-${index}`;
+        
+        html += `
+            <div class="pedido-historial-card" style="margin-bottom: 15px; background: white; border-left: 4px solid ${estadoInfo.color}; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                <!-- Header clickeable -->
+                <div onclick="togglePedidoDetalle('${pedidoId}')" style="padding: 15px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <strong style="font-size: 16px;">${pedido.idPedido}</strong>
+                                <span style="background: ${estadoInfo.color}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">
+                                    ${estadoInfo.icon} ${estadoInfo.label}
+                                </span>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 13px; color: #666;">
+                                📋 ${productos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || 'Sin productos'}
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; align-items: center; gap: 15px;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: bold; color: var(--avellano-red);">
+                                    $${(pedido.total || 0).toLocaleString('es-CO')}
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 3px;">
+                                    ${new Date(pedido.fechaPedido).toLocaleDateString('es-CO')}
+                                </div>
+                            </div>
+                            <div id="${pedidoId}-icon" style="font-size: 24px; color: #999; transition: transform 0.3s;">
+                                ▼
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalle colapsable -->
+                <div id="${pedidoId}" style="max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out;">
+                    <div style="padding: 0 15px 15px 15px; border-top: 1px solid #e5e7eb;">`;
+        
+        // Timeline de estados
+        if (pedido.historialEstados && pedido.historialEstados.length > 0) {
+            html += `
+                        <div style="margin-top: 15px;">
+                            <strong style="font-size: 14px; color: #374151; display: block; margin-bottom: 15px;">
+                                📊 Historial Completo de Atención
+                            </strong>
+                            <div style="position: relative; padding-left: 40px;">
+                                <!-- Línea vertical -->
+                                <div style="position: absolute; left: 15px; top: 10px; bottom: 10px; width: 2px; background: linear-gradient(to bottom, ${estadoMap['pendiente']?.color}, ${estadoMap[pedido.estado]?.color});"></div>
+            `;
+            
+            pedido.historialEstados.forEach((cambio, idx) => {
+                const estadoCambio = estadoMap[cambio.estado] || { icon: '❓', color: '#999', label: cambio.estado };
+                const isFirst = idx === 0;
+                const isLast = idx === pedido.historialEstados.length - 1;
+                
+                html += `
+                                <div style="position: relative; margin-bottom: ${isLast ? '0' : '20px'}; padding: 12px; background: ${isLast ? 'linear-gradient(135deg, ' + estadoCambio.color + '15, ' + estadoCambio.color + '05)' : '#f9fafb'}; border-radius: 8px; border: 1px solid ${estadoCambio.color}30;">
+                                    <!-- Punto en la línea -->
+                                    <div style="position: absolute; left: -34px; top: 15px; width: 12px; height: 12px; background: ${estadoCambio.color}; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 2px ${estadoCambio.color}40;"></div>
+                                    
+                                    <div style="display: flex; align-items: start; gap: 12px;">
+                                        <div style="font-size: 28px; line-height: 1;">
+                                            ${estadoCambio.icon}
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; color: ${estadoCambio.color}; font-size: 14px; margin-bottom: 4px;">
+                                                ${estadoCambio.label}
+                                            </div>
+                                            <div style="font-size: 12px; color: #666; margin-bottom: 6px;">
+                                                📅 ${new Date(cambio.fecha).toLocaleString('es-CO', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                            ${cambio.operadorEmail ? `
+                                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; padding: 6px 10px; background: white; border-radius: 6px; width: fit-content;">
+                                                    <span style="font-size: 16px;">👤</span>
+                                                    <div>
+                                                        <div style="font-size: 11px; color: #999;">Atendido por:</div>
+                                                        <div style="font-size: 12px; font-weight: 500; color: #374151;">
+                                                            ${cambio.operadorEmail}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ` : `
+                                                <div style="font-size: 11px; color: #999; padding: 4px 8px; background: white; border-radius: 4px; width: fit-content;">
+                                                    ⚙️ Sistema automático
+                                                </div>
+                                            `}
+                                            ${cambio.nota ? `
+                                                <div style="margin-top: 8px; padding: 8px 12px; background: white; border-left: 3px solid ${estadoCambio.color}; border-radius: 4px;">
+                                                    <div style="font-size: 11px; color: #999; margin-bottom: 2px;">💬 Nota:</div>
+                                                    <div style="font-size: 12px; color: #374151; font-style: italic;">
+                                                        ${cambio.nota}
+                                                    </div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                `;
+            });
+            
+            html += `
+                            </div>
+                        </div>
+            `;
+        } else {
+            html += `
+                        <div style="margin-top: 15px; padding: 15px; background: #f9fafb; border-radius: 6px; text-align: center; color: #999;">
+                            No hay historial de estados disponible
+                        </div>
+            `;
+        }
+        
+        // Motivo de cancelación
+        if (pedido.estado === 'cancelado' && pedido.notasCancelacion) {
+            html += `
+                        <div style="margin-top: 15px; padding: 12px; background: #fee2e2; border-radius: 6px; border-left: 3px solid #ef4444;">
+                            <div style="display: flex; align-items: start; gap: 10px;">
+                                <span style="font-size: 24px;">❌</span>
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 4px;">
+                                        Motivo de Cancelación:
+                                    </div>
+                                    <div style="font-size: 13px; color: #991b1b;">
+                                        ${pedido.notasCancelacion}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            `;
+        }
+        
+        html += `
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    return html;
+}
+
+// Función para expandir/colapsar detalles del pedido
+function togglePedidoDetalle(pedidoId) {
+    const detalle = document.getElementById(pedidoId);
+    const icon = document.getElementById(pedidoId + '-icon');
+    
+    if (detalle.style.maxHeight && detalle.style.maxHeight !== '0px') {
+        // Colapsar
+        detalle.style.maxHeight = '0px';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        // Expandir
+        detalle.style.maxHeight = detalle.scrollHeight + 'px';
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+// Generar sección de registros
+function generarSeccionRegistros(registros, conversacion) {
+    const fechaRegistro = conversacion.clienteInfo?.fechaRegistro;
+    const ultimaInteraccion = conversacion.ultimaInteraccion;
+    const totalMensajes = conversacion.totalMensajes;
+    
+    let html = `
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: var(--avellano-red); margin-bottom: 15px;">📝 Información de Registro</h4>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                    <div class="info-item-registro">
+                        <div style="font-size: 13px; color: #666; margin-bottom: 5px;">📅 Fecha de Registro</div>
+                        <div style="font-size: 16px; font-weight: 500; color: #1f2937;">
+                            ${fechaRegistro ? new Date(fechaRegistro).toLocaleString('es-CO', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'No disponible'}
+                        </div>
+                    </div>
+                    
+                    <div class="info-item-registro">
+                        <div style="font-size: 13px; color: #666; margin-bottom: 5px;">🕐 Última Interacción</div>
+                        <div style="font-size: 16px; font-weight: 500; color: #1f2937;">
+                            ${ultimaInteraccion}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-size: 13px; color: #666;">💬 Total de Interacciones</div>
+                            <div style="font-size: 24px; font-weight: bold; color: var(--avellano-red); margin-top: 5px;">
+                                ${totalMensajes}
+                            </div>
+                        </div>
+                        <div style="font-size: 48px; opacity: 0.3;">📊</div>
+                    </div>
+                </div>
+    `;
+    
+    if (registros && registros.length > 0) {
+        html += `
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <strong style="font-size: 14px; color: #666;">📋 Eventos de Registro:</strong>
+                    <div style="margin-top: 10px;">
+        `;
+        
+        registros.forEach(registro => {
+            html += `
+                <div style="padding: 12px; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 6px; margin-bottom: 10px;">
+                    <div style="font-size: 13px; font-weight: 500; color: #166534;">
+                        ${registro.contenido || 'Registro completado'}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ${new Date(registro.timestamp).toLocaleString('es-CO')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                    </div>
+                </div>
+        `;
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+// Generar sección de contactos
+function generarSeccionContactos(contactos) {
+    if (!contactos || contactos.length === 0) {
+        return `
+            <div class="empty-state" style="padding: 40px;">
+                <div class="empty-state-icon">📞</div>
+                <p>No hay solicitudes de contacto registradas</p>
+            </div>
+        `;
+    }
+    
+    let html = `
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: var(--avellano-red); margin-bottom: 15px;">📞 Solicitudes de Contacto</h4>
+    `;
+    
+    contactos.forEach(contacto => {
+        html += `
+            <div style="margin-bottom: 15px; padding: 15px; background: white; border-left: 4px solid #8b5cf6; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="margin-bottom: 8px;">
+                    <span style="background: #8b5cf6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">
+                        📞 Contacto con Asesor
+                    </span>
+                </div>
+                <div style="font-size: 14px; color: #374151; margin: 10px 0;">
+                    ${contacto.contenido || 'Solicitud de contacto'}
+                </div>
+                <div style="font-size: 12px; color: #666;">
+                    📅 ${new Date(contacto.timestamp).toLocaleString('es-CO')}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    return html;
 }
 
 // Ver detalle de cliente en modal
@@ -883,6 +1432,52 @@ async function verDetalleCliente(telefono) {
     }
 }
 
+// Actualizar link de WhatsApp cuando se edita el mensaje
+function actualizarLinkWhatsApp(telefono) {
+    const textarea = document.getElementById('mensajeCliente');
+    const whatsappLink = document.getElementById('whatsappLink');
+    
+    if (textarea && whatsappLink) {
+        const mensajeEditado = textarea.value;
+        const mensajeEncoded = encodeURIComponent(mensajeEditado);
+        const nuevoLink = `https://wa.me/${telefono}?text=${mensajeEncoded}`;
+        whatsappLink.href = nuevoLink;
+    }
+}
+
+// Copiar mensaje al portapapeles
+function copiarMensaje() {
+    const textarea = document.getElementById('mensajeCliente');
+    if (textarea) {
+        textarea.select();
+        textarea.setSelectionRange(0, 99999); // Para móviles
+        
+        navigator.clipboard.writeText(textarea.value)
+            .then(() => {
+                // Cambiar temporalmente el texto del botón
+                const btn = event.target;
+                const textoOriginal = btn.innerHTML;
+                btn.innerHTML = '✅ ¡Copiado!';
+                btn.style.backgroundColor = '#10b981';
+                
+                setTimeout(() => {
+                    btn.innerHTML = textoOriginal;
+                    btn.style.backgroundColor = '';
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Error copiando:', err);
+                // Fallback para navegadores antiguos
+                try {
+                    document.execCommand('copy');
+                    alert('✅ Mensaje copiado al portapapeles');
+                } catch (e) {
+                    alert('❌ No se pudo copiar el mensaje');
+                }
+            });
+    }
+}
+
 // Cerrar modal de conversación
 function cerrarModalConversacion() {
     document.getElementById('modalConversacion').classList.remove('active');
@@ -920,19 +1515,38 @@ async function loadUsuarios() {
                         </tr>
                     </thead>
                     <tbody>
-                        ${result.data.map(user => `
+                        ${result.data.map(user => {
+                            // Determinar el texto del rol a mostrar
+                            let rolTexto = '';
+                            if (user.rol === 'administrador') {
+                                rolTexto = 'Administrador';
+                            } else if (user.rol === 'soporte') {
+                                rolTexto = 'Soporte';
+                            } else if (user.rol === 'operador') {
+                                const tipoMap = {
+                                    'mayorista': 'Mayorista',
+                                    'director_comercial': 'Director Comercial',
+                                    'coordinador_masivos': 'Coordinador de Masivos',
+                                    'ejecutivo_horecas': 'Ejecutivo Horecas'
+                                };
+                                rolTexto = tipoMap[user.tipoOperador] || 'Operador';
+                            }
+                            
+                            return `
                             <tr>
                                 <td>${user.nombre || '-'}</td>
                                 <td>${user.email}</td>
                                 <td>
                                     <select class="rol-selector" onchange="changeUserRole('${user._id}', this.value)" ${user.rol === 'administrador' ? 'disabled' : ''}>
-                                        <option value="soporte" ${user.rol === 'soporte' ? 'selected' : ''}>Soporte</option>
-                                        <option value="operador" ${user.rol === 'operador' ? 'selected' : ''}>Operador</option>
                                         <option value="administrador" ${user.rol === 'administrador' ? 'selected' : ''}>Administrador</option>
+                                        <option value="mayorista" ${user.tipoOperador === 'mayorista' ? 'selected' : ''}>Mayorista</option>
+                                        <option value="director_comercial" ${user.tipoOperador === 'director_comercial' ? 'selected' : ''}>Director Comercial</option>
+                                        <option value="coordinador_masivos" ${user.tipoOperador === 'coordinador_masivos' ? 'selected' : ''}>Coordinador de Masivos</option>
+                                        <option value="ejecutivo_horecas" ${user.tipoOperador === 'ejecutivo_horecas' ? 'selected' : ''}>Ejecutivo Horecas</option>
+                                        <option value="soporte" ${user.rol === 'soporte' ? 'selected' : ''}>Soporte</option>
                                     </select>
-                                    ${user.tipoOperador ? `<br><small style="color: #666;">${user.tipoOperador.replace(/_/g, ' ')}</small>` : ''}
                                 </td>
-                                <td><span class="badge ${user.activo ? 'badge-success' : 'badge-danger'}">${user.activo ? 'Activo' : 'Inactivo'}</span></td>
+                                <td><span class="badge ${user.activo ? 'badge-success' : 'badge-danger'}">${user.activo ? 'ACTIVO' : 'INACTIVO'}</span></td>
                                 <td>${new Date(user.createdAt).toLocaleDateString('es-CO')}</td>
                                 <td>
                                     <button class="btn-small ${user.activo ? 'btn-danger' : 'btn-success'}" 
@@ -947,7 +1561,7 @@ async function loadUsuarios() {
                                     </button>
                                 </td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
             `;
@@ -970,7 +1584,39 @@ async function loadUsuarios() {
 async function changeUserRole(userId, newRole) {
     if (!hasRole('administrador')) return
     
-    if (!confirm(`¿Estás seguro de cambiar el rol de este usuario a ${newRole.toUpperCase()}?`)) {
+    // Mapear el valor del select al rol y tipoOperador
+    let rol = 'operador';
+    let tipoOperador = null;
+    
+    const roleMap = {
+        'administrador': { rol: 'administrador', tipoOperador: null },
+        'soporte': { rol: 'soporte', tipoOperador: null },
+        'mayorista': { rol: 'operador', tipoOperador: 'mayorista' },
+        'director_comercial': { rol: 'operador', tipoOperador: 'director_comercial' },
+        'coordinador_masivos': { rol: 'operador', tipoOperador: 'coordinador_masivos' },
+        'ejecutivo_horecas': { rol: 'operador', tipoOperador: 'ejecutivo_horecas' }
+    };
+    
+    const roleConfig = roleMap[newRole];
+    if (!roleConfig) {
+        alert('❌ Rol no válido');
+        loadUsuarios();
+        return;
+    }
+    
+    rol = roleConfig.rol;
+    tipoOperador = roleConfig.tipoOperador;
+    
+    const rolTexto = {
+        'administrador': 'Administrador',
+        'soporte': 'Soporte',
+        'mayorista': 'Mayorista',
+        'director_comercial': 'Director Comercial',
+        'coordinador_masivos': 'Coordinador de Masivos',
+        'ejecutivo_horecas': 'Ejecutivo Horecas'
+    }[newRole] || newRole.toUpperCase();
+    
+    if (!confirm(`¿Estás seguro de cambiar el rol de este usuario a ${rolTexto}?`)) {
         loadUsuarios() // Recargar para resetear el select
         return
     }
@@ -979,12 +1625,12 @@ async function changeUserRole(userId, newRole) {
         const response = await fetchWithAuth(`${API_URL}/usuarios/${userId}/rol`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rol: newRole })
+            body: JSON.stringify({ rol, tipoOperador })
         });
         const result = await response.json();
         
         if (result.success) {
-            alert(`✅ Rol actualizado exitosamente a ${newRole.toUpperCase()}`)
+            alert(`✅ Rol actualizado exitosamente a ${rolTexto}`)
             loadUsuarios()
         } else {
             alert('❌ Error: ' + (result.error || 'No se pudo actualizar el rol'))
@@ -1051,6 +1697,257 @@ async function deleteUser(userId, userEmail) {
     }
 }
 
+// Buscar usuarios
+function buscarUsuarios() {
+    const searchTerm = document.getElementById('searchUsuarios').value.toLowerCase();
+    const container = document.getElementById('usuarios-content');
+    
+    // Obtener todas las filas de la tabla
+    const rows = container.querySelectorAll('tbody tr');
+    
+    if (rows.length === 0) return;
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// ===== GESTIÓN DE AGREGAR USUARIOS =====
+
+// Mostrar modal para agregar usuarios
+function mostrarModalAgregarUsuario() {
+    if (!hasRole('administrador')) {
+        alert('No tienes permisos para agregar usuarios');
+        return;
+    }
+    
+    document.getElementById('modalAgregarUsuario').style.display = 'flex';
+    limpiarFormularioUsuario();
+    cambiarMetodo('individual');
+}
+
+// Cerrar modal
+function cerrarModalAgregarUsuario() {
+    document.getElementById('modalAgregarUsuario').style.display = 'none';
+    limpiarFormularioUsuario();
+}
+
+// Limpiar formulario
+function limpiarFormularioUsuario() {
+    document.getElementById('nuevo-nombre').value = '';
+    document.getElementById('nuevo-email').value = '';
+    document.getElementById('nuevo-password').value = '';
+    document.getElementById('nuevo-rol').value = '';
+    document.getElementById('archivo-csv').value = '';
+    document.getElementById('preview-csv').innerHTML = '';
+}
+
+// Cambiar método (individual o CSV)
+function cambiarMetodo(metodo) {
+    // Actualizar botones
+    document.getElementById('btn-individual').classList.remove('active');
+    document.getElementById('btn-csv').classList.remove('active');
+    document.getElementById(`btn-${metodo}`).classList.add('active');
+    
+    // Mostrar/ocultar formularios
+    document.getElementById('form-individual').style.display = metodo === 'individual' ? 'block' : 'none';
+    document.getElementById('form-csv').style.display = metodo === 'csv' ? 'block' : 'none';
+}
+
+// Guardar usuario individual
+async function guardarUsuarioIndividual() {
+    const nombre = document.getElementById('nuevo-nombre').value.trim();
+    const email = document.getElementById('nuevo-email').value.trim();
+    const password = document.getElementById('nuevo-password').value;
+    const rolSeleccionado = document.getElementById('nuevo-rol').value;
+    
+    if (!nombre || !email || !password || !rolSeleccionado) {
+        alert('Por favor completa todos los campos');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('La contraseña debe tener al menos 6 caracteres');
+        return;
+    }
+    
+    // Mapear el valor del select al rol y tipoOperador
+    const roleMap = {
+        'administrador': { rol: 'administrador', tipoOperador: null },
+        'soporte': { rol: 'soporte', tipoOperador: null },
+        'mayorista': { rol: 'operador', tipoOperador: 'mayorista' },
+        'director_comercial': { rol: 'operador', tipoOperador: 'director_comercial' },
+        'coordinador_masivos': { rol: 'operador', tipoOperador: 'coordinador_masivos' },
+        'ejecutivo_horecas': { rol: 'operador', tipoOperador: 'ejecutivo_horecas' }
+    };
+    
+    const roleConfig = roleMap[rolSeleccionado];
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/usuarios`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre,
+                email,
+                password,
+                rol: roleConfig.rol,
+                tipoOperador: roleConfig.tipoOperador
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Usuario creado exitosamente');
+            cerrarModalAgregarUsuario();
+            loadUsuarios();
+        } else {
+            alert('❌ Error: ' + (result.error || result.message || 'No se pudo crear el usuario'));
+        }
+    } catch (error) {
+        console.error('Error creando usuario:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+// Preview de CSV
+function previewCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        const lines = content.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+            alert('El archivo CSV está vacío o no tiene el formato correcto');
+            return;
+        }
+        
+        const preview = document.getElementById('preview-csv');
+        preview.innerHTML = `
+            <div class="csv-preview-box">
+                <strong>Vista previa (${lines.length - 1} usuarios detectados):</strong>
+                <table class="csv-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${lines.slice(1, Math.min(6, lines.length)).map(line => {
+                            const [nombre, email, , rol] = line.split(',').map(s => s.trim());
+                            return `
+                                <tr>
+                                    <td>${nombre || '-'}</td>
+                                    <td>${email || '-'}</td>
+                                    <td>${rol || '-'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                        ${lines.length > 6 ? '<tr><td colspan="3" style="text-align: center; color: #666;">...</td></tr>' : ''}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    };
+    reader.readAsText(file);
+}
+
+// Importar usuarios desde CSV
+async function importarUsuariosCSV() {
+    const fileInput = document.getElementById('archivo-csv');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Por favor selecciona un archivo CSV');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const content = e.target.result;
+        const lines = content.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+            alert('El archivo CSV está vacío o no tiene datos');
+            return;
+        }
+        
+        // Procesar usuarios
+        const usuarios = [];
+        const roleMap = {
+            'administrador': { rol: 'administrador', tipoOperador: null },
+            'soporte': { rol: 'soporte', tipoOperador: null },
+            'mayorista': { rol: 'operador', tipoOperador: 'mayorista' },
+            'director_comercial': { rol: 'operador', tipoOperador: 'director_comercial' },
+            'coordinador_masivos': { rol: 'operador', tipoOperador: 'coordinador_masivos' },
+            'ejecutivo_horecas': { rol: 'operador', tipoOperador: 'ejecutivo_horecas' }
+        };
+        
+        for (let i = 1; i < lines.length; i++) {
+            const [nombre, email, password, rolSeleccionado] = lines[i].split(',').map(s => s.trim());
+            
+            if (!nombre || !email || !password || !rolSeleccionado) {
+                console.warn(`Línea ${i + 1} incompleta, omitida`);
+                continue;
+            }
+            
+            const roleConfig = roleMap[rolSeleccionado];
+            if (!roleConfig) {
+                console.warn(`Línea ${i + 1}: rol '${rolSeleccionado}' no válido, omitida`);
+                continue;
+            }
+            
+            usuarios.push({
+                nombre,
+                email,
+                password,
+                rol: roleConfig.rol,
+                tipoOperador: roleConfig.tipoOperador
+            });
+        }
+        
+        if (usuarios.length === 0) {
+            alert('No se encontraron usuarios válidos en el archivo');
+            return;
+        }
+        
+        // Enviar usuarios al servidor
+        try {
+            const response = await fetchWithAuth(`${API_URL}/usuarios/bulk`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuarios })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`✅ ${result.data.creados} usuarios creados exitosamente${result.data.errores > 0 ? `\n⚠️ ${result.data.errores} usuarios con errores` : ''}`);
+                cerrarModalAgregarUsuario();
+                loadUsuarios();
+            } else {
+                alert('❌ Error: ' + (result.error || result.message || 'No se pudieron importar los usuarios'));
+            }
+        } catch (error) {
+            console.error('Error importando usuarios:', error);
+            alert('❌ Error de conexión');
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
 // Función de logout
 async function logout() {
     try {
@@ -1079,9 +1976,11 @@ function switchTab(tabName) {
     document.getElementById(`${tabName}-tab`).classList.add('active');
     document.getElementById(`page-title`).textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
     
-    // Cargar datos del tab si es usuarios
+    // Cargar datos del tab
     if (tabName === 'usuarios') {
         loadUsuarios();
+    } else if (tabName === 'eventos') {
+        loadEventos();
     }
 }
 
@@ -1096,6 +1995,553 @@ function loadAll() {
         loadPedidos();
         loadConversaciones();
     }
+    
+    // Cargar eventos si es admin o soporte
+    if (hasRole('administrador', 'soporte')) {
+        // Solo recargar si la pestaña de eventos está activa
+        const eventosTab = document.getElementById('eventos-tab');
+        if (eventosTab && eventosTab.classList.contains('active')) {
+            loadEventos();
+        }
+    }
+}
+
+// ==================== FUNCIONES DE BÚSQUEDA Y FILTROS ====================
+
+// Variables globales para almacenar datos originales
+let clientesOriginales = [];
+let pedidosOriginales = [];
+let conversacionesOriginales = [];
+
+// ===== BÚSQUEDA Y FILTROS PARA CLIENTES =====
+function buscarClientes() {
+    const searchTerm = document.getElementById('searchClientes').value.toLowerCase();
+    const filtered = todosClientes.filter(cliente => {
+        return (
+            (cliente.telefono || '').toLowerCase().includes(searchTerm) ||
+            (cliente.nombreNegocio || '').toLowerCase().includes(searchTerm) ||
+            (cliente.ciudad || '').toLowerCase().includes(searchTerm) ||
+            (cliente.nombre || '').toLowerCase().includes(searchTerm)
+        );
+    });
+    
+    renderizarClientes(filtered);
+}
+
+function aplicarFiltrosClientes() {
+    let filtered = [...todosClientes];
+    
+    const ordenarFecha = document.getElementById('ordenarFechaCliente').checked;
+    
+    if (ordenarFecha) {
+        filtered.sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
+    }
+    
+    // Aplicar búsqueda también
+    const searchTerm = document.getElementById('searchClientes').value.toLowerCase();
+    if (searchTerm) {
+        filtered = filtered.filter(cliente => {
+            return (
+                (cliente.telefono || '').toLowerCase().includes(searchTerm) ||
+                (cliente.nombreNegocio || '').toLowerCase().includes(searchTerm) ||
+                (cliente.ciudad || '').toLowerCase().includes(searchTerm)
+            );
+        });
+    }
+    
+    renderizarClientes(filtered);
+}
+
+function renderizarClientes(clientes) {
+    const container = document.getElementById('clientes-content');
+    const responsableMap = {
+        'coordinador_masivos': 'Coord. Masivos',
+        'director_comercial': 'Dir. Comercial',
+        'ejecutivo_horecas': 'Ejec. Horecas',
+        'mayorista': 'Mayorista'
+    };
+    
+    if (clientes.length > 0) {
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Teléfono</th>
+                        <th>Tipo</th>
+                        <th>Nombre Negocio</th>
+                        <th>Ciudad</th>
+                        <th>Responsable</th>
+                        <th>Fecha Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${clientes.map(cliente => {
+                        const responsableTexto = cliente.responsable 
+                            ? responsableMap[cliente.responsable] || cliente.responsable 
+                            : '-';
+                        
+                        return `
+                            <tr class="clickable-row" onclick="verDetalleCliente('${cliente.telefono}')">
+                                <td>${cliente.telefono || '-'}</td>
+                                <td><span class="badge badge-${cliente.tipoCliente}">${cliente.tipoCliente.toUpperCase()}</span></td>
+                                <td>${cliente.nombreNegocio || '-'}</td>
+                                <td>${cliente.ciudad || '-'}</td>
+                                <td><span class="badge badge-info">${responsableTexto}</span></td>
+                                <td>${new Date(cliente.fechaRegistro).toLocaleDateString('es-CO')}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <p>No se encontraron clientes con los criterios de búsqueda</p>
+            </div>
+        `;
+    }
+}
+
+// ===== BÚSQUEDA Y FILTROS PARA PEDIDOS =====
+function buscarPedidos() {
+    const searchTerm = document.getElementById('searchPedidos').value.toLowerCase();
+    const filtered = todosPedidos.filter(pedido => {
+        return (
+            (pedido.idPedido || '').toLowerCase().includes(searchTerm) ||
+            (pedido.nombreNegocio || '').toLowerCase().includes(searchTerm) ||
+            (pedido.productos || []).some(p => p.nombre.toLowerCase().includes(searchTerm))
+        );
+    });
+    
+    mostrarPedidosFiltrados(estadoFiltroActual, filtered);
+}
+
+function aplicarFiltrosPedidos() {
+    let filtered = [...todosPedidos];
+    
+    const ordenarMonto = document.getElementById('filtroPedidoMonto').checked;
+    const ordenarFecha = document.getElementById('filtroPedidoFecha').checked;
+    
+    if (ordenarMonto) {
+        filtered.sort((a, b) => b.total - a.total);
+    } else if (ordenarFecha) {
+        filtered.sort((a, b) => new Date(b.fechaPedido) - new Date(a.fechaPedido));
+    }
+    
+    // Aplicar búsqueda también
+    const searchTerm = document.getElementById('searchPedidos').value.toLowerCase();
+    if (searchTerm) {
+        filtered = filtered.filter(pedido => {
+            return (
+                (pedido.idPedido || '').toLowerCase().includes(searchTerm) ||
+                (pedido.nombreNegocio || '').toLowerCase().includes(searchTerm) ||
+                (pedido.productos || []).some(p => p.nombre.toLowerCase().includes(searchTerm))
+            );
+        });
+    }
+    
+    mostrarPedidosFiltrados(estadoFiltroActual, filtered);
+}
+
+// ===== BÚSQUEDA Y FILTROS PARA CONVERSACIONES =====
+function buscarConversaciones() {
+    const searchTerm = document.getElementById('searchConversaciones').value.toLowerCase();
+    const container = document.getElementById('conversaciones-content');
+    
+    // Obtener conversaciones desde el DOM actual
+    const conversacionCards = Array.from(container.querySelectorAll('.conversacion-card'));
+    
+    conversacionCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function aplicarFiltrosConversaciones() {
+    // Esta función recargaría las conversaciones con los filtros aplicados
+    loadConversaciones();
+}
+
+// ===== GESTIÓN DE EVENTOS =====
+let todosEventos = [];
+let clientesParaEvento = [];
+
+// Cargar eventos
+async function loadEventos() {
+    const container = document.getElementById('eventos-content');
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">⏳</div>
+            <p>Cargando eventos...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/eventos`);
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+            todosEventos = result.data;
+            mostrarEventos(todosEventos);
+        } else {
+            todosEventos = [];
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>No hay eventos creados aún</p>
+                    <button class="btn-primary" onclick="mostrarFormularioEvento()">+ Crear Primer Evento</button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error cargando eventos:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">❌</div>
+                <p>Error cargando eventos</p>
+            </div>
+        `;
+    }
+}
+
+// Mostrar eventos en tabla
+function mostrarEventos(eventos) {
+    const container = document.getElementById('eventos-content');
+    
+    if (eventos.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>No se encontraron eventos</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Mensaje</th>
+                    <th>Destinatarios</th>
+                    <th>Enviados</th>
+                    <th>Estado</th>
+                    <th>Fecha Creación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${eventos.map(evento => {
+                    const estadoBadge = {
+                        'borrador': 'badge-info',
+                        'enviado': 'badge-success',
+                        'enviando': 'badge-warning',
+                        'error': 'badge-danger'
+                    }[evento.estado] || 'badge-info';
+                    
+                    return `
+                        <tr>
+                            <td><strong>${evento.nombre}</strong></td>
+                            <td>${evento.mensaje.substring(0, 50)}${evento.mensaje.length > 50 ? '...' : ''}</td>
+                            <td>${evento.destinatarios?.total || 0}</td>
+                            <td>${evento.destinatarios?.enviados || 0}</td>
+                            <td><span class="badge ${estadoBadge}">${evento.estado.toUpperCase()}</span></td>
+                            <td>${new Date(evento.fechaCreacion).toLocaleDateString('es-CO')}</td>
+                            <td>
+                                <button class="btn-sm btn-info" onclick="verDetalleEvento('${evento._id}')" title="Ver detalle">👁️</button>
+                                ${evento.estado === 'borrador' ? `<button class="btn-sm btn-danger" onclick="eliminarEvento('${evento._id}')" title="Eliminar">🗑️</button>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// Mostrar formulario de evento
+async function mostrarFormularioEvento() {
+    document.getElementById('form-evento').style.display = 'block';
+    document.getElementById('form-evento-titulo').textContent = 'Crear Nuevo Evento';
+    
+    // Limpiar formulario
+    document.getElementById('evento-nombre').value = '';
+    document.getElementById('evento-mensaje').value = '';
+    document.getElementById('evento-imagen').value = '';
+    document.getElementById('preview-imagen').innerHTML = '';
+    document.querySelector('input[name="destinatario"][value="todos"]').checked = true;
+    
+    // Desmarcar todos los checkboxes
+    document.querySelectorAll('.ciudad-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.tipo-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.filtro-ciudad-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.filtro-tipo-checkbox').forEach(cb => cb.checked = false);
+    
+    // Cargar clientes para calcular destinatarios
+    await cargarClientesParaEvento();
+    actualizarDestinatarios();
+}
+
+// Cerrar formulario
+function cerrarFormularioEvento() {
+    document.getElementById('form-evento').style.display = 'none';
+}
+
+// Cargar clientes disponibles
+async function cargarClientesParaEvento() {
+    try {
+        const response = await fetchWithAuth(`${API_URL}/clientes`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            clientesParaEvento = result.data;
+        }
+    } catch (error) {
+        console.error('Error cargando clientes:', error);
+    }
+}
+
+// Actualizar contador de destinatarios
+function actualizarDestinatarios() {
+    const tipoDestinatario = document.querySelector('input[name="destinatario"]:checked').value;
+    
+    // Ocultar todos los selectores
+    document.getElementById('selector-ciudad').style.display = 'none';
+    document.getElementById('selector-tipo').style.display = 'none';
+    document.getElementById('selector-personalizado').style.display = 'none';
+    
+    let destinatarios = [];
+    
+    if (tipoDestinatario === 'todos') {
+        destinatarios = clientesParaEvento;
+    } else if (tipoDestinatario === 'hogar') {
+        destinatarios = clientesParaEvento.filter(c => c.tipoCliente === 'hogar');
+    } else if (tipoDestinatario === 'ciudad') {
+        document.getElementById('selector-ciudad').style.display = 'block';
+        const ciudadesSeleccionadas = Array.from(document.querySelectorAll('.ciudad-checkbox:checked')).map(cb => cb.value);
+        if (ciudadesSeleccionadas.length > 0) {
+            destinatarios = clientesParaEvento.filter(c => ciudadesSeleccionadas.includes(c.ciudad));
+        }
+    } else if (tipoDestinatario === 'tipo') {
+        document.getElementById('selector-tipo').style.display = 'block';
+        const tiposSeleccionados = Array.from(document.querySelectorAll('.tipo-checkbox:checked')).map(cb => cb.value);
+        if (tiposSeleccionados.length > 0) {
+            destinatarios = clientesParaEvento.filter(c => tiposSeleccionados.includes(c.tipoCliente));
+        }
+    } else if (tipoDestinatario === 'personalizado') {
+        document.getElementById('selector-personalizado').style.display = 'block';
+        const ciudades = Array.from(document.querySelectorAll('.filtro-ciudad-checkbox:checked')).map(cb => cb.value);
+        const tipos = Array.from(document.querySelectorAll('.filtro-tipo-checkbox:checked')).map(cb => cb.value);
+        
+        destinatarios = clientesParaEvento.filter(c => {
+            const cumpleCiudad = ciudades.length === 0 || ciudades.includes(c.ciudad);
+            const cumpleTipo = tipos.length === 0 || tipos.includes(c.tipoCliente);
+            return cumpleCiudad && cumpleTipo;
+        });
+    }
+    
+    document.getElementById('count-destinatarios').textContent = `${destinatarios.length} destinatarios seleccionados`;
+}
+
+// Funciones para seleccionar todos
+function seleccionarTodasCiudades() {
+    const checkboxes = document.querySelectorAll('.ciudad-checkbox');
+    const todosSeleccionados = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !todosSeleccionados;
+    });
+    
+    actualizarDestinatarios();
+}
+
+function seleccionarTodosTipos() {
+    const checkboxes = document.querySelectorAll('.tipo-checkbox');
+    const todosSeleccionados = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !todosSeleccionados;
+    });
+    
+    actualizarDestinatarios();
+}
+
+function seleccionarTodasCiudadesPersonalizado() {
+    const checkboxes = document.querySelectorAll('.filtro-ciudad-checkbox');
+    const todosSeleccionados = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !todosSeleccionados;
+    });
+    
+    actualizarDestinatarios();
+}
+
+function seleccionarTodosTiposPersonalizado() {
+    const checkboxes = document.querySelectorAll('.filtro-tipo-checkbox');
+    const todosSeleccionados = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !todosSeleccionados;
+    });
+    
+    actualizarDestinatarios();
+}
+
+// Preview de imagen
+function previewImagen(event) {
+    const preview = document.getElementById('preview-imagen');
+    const file = event.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 300px; max-height: 300px; border-radius: 8px;">`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+// Guardar y enviar evento
+async function guardarEvento() {
+    const nombre = document.getElementById('evento-nombre').value.trim();
+    const mensaje = document.getElementById('evento-mensaje').value.trim();
+    const tipoDestinatario = document.querySelector('input[name="destinatario"]:checked').value;
+    const imagenFile = document.getElementById('evento-imagen').files[0];
+    
+    if (!nombre || !mensaje) {
+        alert('Por favor completa el nombre y el mensaje del evento');
+        return;
+    }
+    
+    // Obtener filtros según tipo
+    let filtros = { tipo: tipoDestinatario };
+    
+    if (tipoDestinatario === 'ciudad') {
+        filtros.ciudades = Array.from(document.querySelectorAll('.ciudad-checkbox:checked')).map(cb => cb.value);
+        if (filtros.ciudades.length === 0) {
+            alert('Selecciona al menos una ciudad');
+            return;
+        }
+    } else if (tipoDestinatario === 'tipo') {
+        filtros.tiposCliente = Array.from(document.querySelectorAll('.tipo-checkbox:checked')).map(cb => cb.value);
+        if (filtros.tiposCliente.length === 0) {
+            alert('Selecciona al menos un tipo de cliente');
+            return;
+        }
+    } else if (tipoDestinatario === 'personalizado') {
+        filtros.ciudades = Array.from(document.querySelectorAll('.filtro-ciudad-checkbox:checked')).map(cb => cb.value);
+        filtros.tiposCliente = Array.from(document.querySelectorAll('.filtro-tipo-checkbox:checked')).map(cb => cb.value);
+        
+        if (filtros.ciudades.length === 0 && filtros.tiposCliente.length === 0) {
+            alert('Selecciona al menos una ciudad o un tipo de cliente en modo personalizado');
+            return;
+        }
+    }
+    
+    // Crear FormData para enviar con imagen
+    const formData = new FormData();
+    formData.append('nombre', nombre);
+    formData.append('mensaje', mensaje);
+    formData.append('filtros', JSON.stringify(filtros));
+    if (imagenFile) {
+        formData.append('imagen', imagenFile);
+    }
+    
+    try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`${API_URL}/eventos`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ Evento creado y enviado a ${result.data.destinatarios.total} destinatarios`);
+            cerrarFormularioEvento();
+            loadEventos();
+        } else {
+            alert('Error creando evento: ' + (result.message || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error guardando evento:', error);
+        alert('Error al guardar el evento');
+    }
+}
+
+// Ver detalle de evento
+async function verDetalleEvento(eventoId) {
+    try {
+        const response = await fetchWithAuth(`${API_URL}/eventos/${eventoId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const evento = result.data;
+            alert(`
+Evento: ${evento.nombre}
+Mensaje: ${evento.mensaje}
+Destinatarios: ${evento.destinatarios.total}
+Enviados: ${evento.destinatarios.enviados}
+Estado: ${evento.estado}
+            `.trim());
+        }
+    } catch (error) {
+        console.error('Error cargando detalle:', error);
+    }
+}
+
+// Eliminar evento
+async function eliminarEvento(eventoId) {
+    if (!confirm('¿Estás seguro de eliminar este evento?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetchWithAuth(`${API_URL}/eventos/${eventoId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Evento eliminado');
+            loadEventos();
+        }
+    } catch (error) {
+        console.error('Error eliminando evento:', error);
+        alert('Error al eliminar el evento');
+    }
+}
+
+// Buscar eventos
+function buscarEventos() {
+    const searchTerm = document.getElementById('searchEventos').value.toLowerCase();
+    
+    if (!searchTerm) {
+        mostrarEventos(todosEventos);
+        return;
+    }
+    
+    const eventosFiltrados = todosEventos.filter(evento => {
+        return evento.nombre.toLowerCase().includes(searchTerm) ||
+               evento.mensaje.toLowerCase().includes(searchTerm);
+    });
+    
+    mostrarEventos(eventosFiltrados);
 }
 
 // Inicializar al cargar
