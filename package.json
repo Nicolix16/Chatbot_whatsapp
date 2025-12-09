@@ -12,6 +12,7 @@
     "dev:dashboard": "tsx --env-file=.env ./src/server.ts",
     "build": "npx rollup -c",
     "build:server": "npx tsc -p tsconfig.json",
+    "vercel-build": "npm run build:server",
     "seed:user": "tsx --env-file=.env ./src/scripts/seedUser.ts",
     "seed:pedidos": "tsx --env-file=.env ./src/scripts/seedPedidos.ts",
     "seed:pedidos:delete": "tsx --env-file=.env ./src/scripts/seedPedidos.ts --delete",

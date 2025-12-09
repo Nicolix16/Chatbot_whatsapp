@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+*.log
+.DS_Store
+bot.qr.png
+baileys_store_*
+.wwebjs_auth
+.wwebjs_cache
