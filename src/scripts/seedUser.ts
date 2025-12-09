@@ -53,7 +53,7 @@ async function main() {
     const existing = await Usuario.findOne({ email })
     if (existing) {
       if (!updateIfExists) {
-        console.log(`ℹ️ El usuario ${email} ya existe. Usa --update=true para actualizar.`)
+        console.log(`ℹ️ El usuario ya existe. Usa --update=true para actualizar.`)
         process.exit(0)
       }
       const passwordHash = await bcrypt.hash(password, 10)
@@ -62,7 +62,7 @@ async function main() {
       existing.tipoOperador = rol === 'operador' ? tipoOperador : null
       if (nombre) existing.nombre = nombre
       await existing.save()
-      console.log(`🔑 Usuario actualizado: ${email} (Rol: ${rol}${tipoOperador ? `, Tipo: ${tipoOperador}` : ''})`)
+      console.log(`🔑 Usuario actualizado exitosamente (Rol: ${rol}${tipoOperador ? `, Tipo: ${tipoOperador}` : ''})`)
       process.exit(0)
     }
 
@@ -76,7 +76,7 @@ async function main() {
       activo: true
     })
     await user.save()
-    console.log(`✅ Usuario creado: ${email} (Rol: ${rol}${tipoOperador ? `, Tipo: ${tipoOperador}` : ''}, id: ${user._id})`)
+    console.log(`✅ Usuario creado exitosamente (Rol: ${rol}${tipoOperador ? `, Tipo: ${tipoOperador}` : ''})`)
     process.exit(0)
   } catch (err) {
     console.error('❌ Error en seed:', err)

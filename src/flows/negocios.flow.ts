@@ -96,7 +96,7 @@ async function guardarDatosNegocio(ctx: any, state: any, flowDynamic: any, tipoN
     let cliente = await Cliente.findOne({ telefono: user })
     
     if (cliente) {
-      console.log(`📂 Cliente existente: ${user}`)
+      console.log('📂 Actualizando cliente existente')
       cliente.tipoCliente = tipoNegocio as any
       cliente.nombreNegocio = nombreNegocio
       cliente.ciudad = ciudad
@@ -108,7 +108,7 @@ async function guardarDatosNegocio(ctx: any, state: any, flowDynamic: any, tipoN
       cliente.conversaciones += 1
       await cliente.save()
     } else {
-      console.log(`🆕 Nuevo cliente: ${user}`)
+      console.log('🆕 Registrando nuevo cliente')
       cliente = new Cliente({
         telefono: user,
         tipoCliente: tipoNegocio,
@@ -174,7 +174,7 @@ async function guardarDatosNegocio(ctx: any, state: any, flowDynamic: any, tipoN
       }
     ])
     
-    console.log(`✅ Cliente guardado: ${user} como ${tipoNegocio} - Responsable: ${responsableInfo.tipo}`)
+    console.log(`✅ Cliente registrado como ${tipoNegocio} - Responsable: ${responsableInfo.tipo}`)
     
   } catch (error) {
     console.error('❌ Error guardando en BD:', error)

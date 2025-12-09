@@ -3,6 +3,7 @@ import cors from 'cors'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import mongoose from 'mongoose'
+import multer from 'multer'
 import Cliente from './models/Cliente.js'
 import Pedido from './models/Pedido.js'
 import Conversacion from './models/Conversacion.js'
@@ -19,9 +20,25 @@ const __dirname = dirname(__filename)
 const app = express()
 const PORT = 3009 // Puerto diferente al del bot
 
+// Configurar multer para manejar archivos (imágenes de eventos)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB máximo
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Solo se permiten imágenes'))
+    }
+  }
+})
+
 // Middlewares
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Middleware para desactivar caché
 app.use((req, res, next) => {
@@ -284,8 +301,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const baseUrl = process.env.APP_URL || `http://localhost:${PORT}`
     const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}`
     
-    console.log('🔐 Token de recuperación generado para:', user.email)
-    console.log('🔗 URL de recuperación:', resetUrl)
+    console.log('🔐 Token de recuperación generado exitosamente')
 
     // Enviar email con SendGrid
     if (SENDGRID_API_KEY) {
@@ -405,7 +421,7 @@ Si no solicitaste este cambio, puedes ignorar este correo.
         }
 
         await sgMail.send(msg)
-        console.log('✅ Email enviado exitosamente a:', user.email)
+        console.log('✅ Email de recuperación enviado exitosamente')
 
         res.json({ 
           success: true, 
@@ -516,7 +532,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     user.refreshToken = undefined // Invalidar sesiones activas
     await user.save()
 
-    console.log('✅ Contraseña actualizada para:', user.email)
+    console.log('✅ Contraseña actualizada exitosamente')
 
     res.json({ 
       success: true, 
@@ -835,7 +851,8 @@ app.get('/api/pedidos', verificarToken, async (req: AuthRequest, res) => {
     // Si se proporciona un teléfono específico, filtrar solo por ese
     if (req.query.telefono) {
       pedidos = await Pedido.find({ telefono: req.query.telefono }).sort({ fechaPedido: -1 }).lean()
-      console.log('📞 Pedidos del teléfono', req.query.telefono, ':', pedidos.length)
+      // Log seguro - solo cantidad
+      console.log('📞 Consulta de pedidos por teléfono: encontrados', pedidos.length)
       
       return res.json({
         success: true,
@@ -852,15 +869,14 @@ app.get('/api/pedidos', verificarToken, async (req: AuthRequest, res) => {
         { telefono: 1 }
       ).lean()
       
-      console.log('👥 Clientes asignados encontrados:', clientesAsignados.length)
-      console.log('📞 Detalles de clientes:', clientesAsignados)
+      // Log seguro - solo cantidades
+      console.log('👥 Filtrado de pedidos para operador - Clientes asignados:', clientesAsignados.length)
       
       const telefonos = clientesAsignados.map(c => c.telefono)
-      console.log('📞 Teléfonos a buscar:', telefonos)
       
       // Si no hay clientes asignados, retornar array vacío
       if (telefonos.length === 0) {
-        console.log('⚠️ No hay clientes asignados al operador')
+        console.log('⚠️ Operador sin clientes asignados')
         return res.json({
           success: true,
           total: 0,
@@ -870,8 +886,7 @@ app.get('/api/pedidos', verificarToken, async (req: AuthRequest, res) => {
       
       // Filtrar pedidos solo de esos clientes
       pedidos = await Pedido.find({ telefono: { $in: telefonos } }).sort({ fechaPedido: -1 }).lean()
-      console.log('📦 Pedidos encontrados:', pedidos.length)
-      console.log('📦 Pedidos:', pedidos.map(p => ({ id: p.idPedido, telefono: p.telefono })))
+      console.log('📦 Pedidos filtrados encontrados:', pedidos.length)
     } else {
       // Administrador y soporte ven todos los pedidos
       pedidos = await Pedido.find({}).sort({ fechaPedido: -1 }).lean()
@@ -957,10 +972,10 @@ app.post('/api/whatsapp/enviar-mensaje', verificarToken, permisoEscritura, async
     const data = await response.json()
     
     if (response.ok) {
-      console.log(`✅ Mensaje enviado a ${telefono}`)
+      console.log('✅ Mensaje de WhatsApp enviado exitosamente')
       res.json({ success: true, data })
     } else {
-      console.error('❌ Error enviando mensaje:', data)
+      console.error('❌ Error enviando mensaje de WhatsApp')
       res.status(500).json({ success: false, error: 'Error enviando mensaje de WhatsApp', details: data })
     }
   } catch (error) {
@@ -1019,7 +1034,7 @@ app.patch('/api/pedidos/:id/estado', verificarToken, permisoEscritura, async (re
     
     await pedido.save()
     
-    console.log(`✅ Pedido ${pedido.idPedido} actualizado a estado: ${estado} por ${req.user!.email}`)
+    console.log(`✅ Pedido actualizado: ${pedido.idPedido} - Estado: ${estado}`)
     
     res.json({ success: true, data: pedido })
   } catch (error) {
@@ -1226,11 +1241,14 @@ app.get('/api/eventos/:id', verificarToken, adminOOperador, async (req: AuthRequ
 })
 
 // Crear y enviar evento (admin y soporte)
-app.post('/api/eventos', verificarToken, permisoEscritura, async (req: AuthRequest, res) => {
+app.post('/api/eventos', verificarToken, permisoEscritura, upload.single('imagen'), async (req: AuthRequest, res) => {
   try {
     const { nombre, mensaje, filtros } = req.body
     
+    console.log('📝 Datos recibidos:', { nombre, mensaje, filtros, hasFile: !!req.file })
+    
     if (!nombre || !mensaje || !filtros) {
+      console.error('❌ Faltan campos:', { nombre: !!nombre, mensaje: !!mensaje, filtros: !!filtros })
       return res.status(400).json({
         success: false,
         message: 'Faltan campos requeridos',

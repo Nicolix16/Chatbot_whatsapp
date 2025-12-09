@@ -38,7 +38,7 @@ export const hogarFlow = addKeyword<Provider, Database>([
       await cliente.save()
     }
     
-    console.log(`✅ Cliente hogar registrado/actualizado: ${user}`)
+    console.log('✅ Cliente hogar registrado/actualizado exitosamente')
   } catch (error) {
     console.error('❌ Error guardando cliente hogar:', error)
   }

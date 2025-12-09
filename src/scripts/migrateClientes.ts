@@ -67,10 +67,10 @@ async function main() {
             $unset: { ubicacion: '' }
           }
         )
-        console.log(`✅ Migrado: ${cliente.telefono} -> ${responsable}`)
+        console.log(`✅ Cliente migrado exitosamente -> ${responsable}`)
         migrados++
       } else {
-        console.log(`⚠️ No se pudo determinar responsable para: ${cliente.telefono} (ubicacion: ${ubicacionValue})`)
+        console.log(`⚠️ No se pudo determinar responsable para cliente (ubicacion: ${ubicacionValue})`)
         sinCambios++
       }
     }

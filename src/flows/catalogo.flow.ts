@@ -355,7 +355,7 @@ export async function finalizarPedido(ctx: any, state: any, flowDynamic: any, ti
     '💬 Si necesitas algo más, escribe "menú" para volver al inicio.',
   ].join('\n'))
   
-  console.log(`📨 Pedido confirmado - ID: ${idPedido} - Cliente: ${cliente.nombreNegocio || cliente.personaContacto}`)
+  console.log(`📨 Pedido confirmado - ID: ${idPedido}`)
 }
 
   // Flujo para finalizar pedido
