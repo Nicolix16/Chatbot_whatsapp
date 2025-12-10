@@ -1,46 +1,10 @@
 {
-  "version": 2,
-  "name": "chatbot-avellano-frontend",
-  "builds": [
-    {
-      "src": "frontend/public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/css/(.*)",
-      "dest": "/frontend/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/frontend/public/js/$1"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/frontend/public/assets/$1"
-    },
-    {
-      "src": "/pages/(.*)",
-      "dest": "/frontend/public/pages/$1"
-    },
-    {
-      "src": "/login",
-      "dest": "/frontend/public/pages/login.html"
-    },
-    {
-      "src": "/reset-password",
-      "dest": "/frontend/public/pages/reset-password.html"
-    },
-    {
-      "src": "/",
-      "dest": "/frontend/public/pages/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/public/pages/$1"
-    }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  "rewrites": [
+    { "source": "/css/:path*", "destination": "/frontend/public/css/:path*" },
+    { "source": "/js/:path*", "destination": "/frontend/public/js/:path*" },
+    { "source": "/assets/:path*", "destination": "/frontend/public/assets/:path*" },
+    { "source": "/login.html", "destination": "/frontend/public/pages/login.html" },
+    { "source": "/reset-password.html", "destination": "/frontend/public/pages/reset-password.html" },
+    { "source": "/", "destination": "/frontend/public/pages/index.html" }
+  ]
 }
