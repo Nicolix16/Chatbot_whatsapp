@@ -861,19 +861,30 @@ app.delete('/api/usuarios/:id', verificarToken, soloAdmin, async (req: AuthReque
 
 // ========== ENDPOINTS DE DATOS ==========
 
-// Rutas de páginas HTML (deben ir ANTES de servir estáticos)
-app.get('/', (req, res) => {
-  // Servir el dashboard sin validación - la validación ocurre en app.js
-  return res.sendFile(join(__dirname, '../../frontend/public/pages/index.html'))
-})
+// Rutas de páginas HTML (solo en desarrollo local, no en producción)
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/', (req, res) => {
+    // Servir el dashboard sin validación - la validación ocurre en app.js
+    return res.sendFile(join(__dirname, '../../frontend/public/pages/index.html'))
+  })
 
-app.get('/login.html', (req, res) => {
-  return res.sendFile(join(__dirname, '../../frontend/public/pages/login.html'))
-})
+  app.get('/login.html', (req, res) => {
+    return res.sendFile(join(__dirname, '../../frontend/public/pages/login.html'))
+  })
 
-app.get('/reset-password.html', (req, res) => {
-  return res.sendFile(join(__dirname, '../../frontend/public/pages/reset-password.html'))
-})
+  app.get('/reset-password.html', (req, res) => {
+    return res.sendFile(join(__dirname, '../../frontend/public/pages/reset-password.html'))
+  })
+} else {
+  // En producción, redirigir al frontend en Vercel
+  app.get('/', (req, res) => {
+    res.json({ 
+      message: 'API Backend - Chatbot Avellano', 
+      status: 'active',
+      frontend: process.env.FRONTEND_URL || 'https://tu-frontend.vercel.app'
+    })
+  })
+}
 
 // 📊 Clientes - Filtrados por responsable del operador
 app.get('/api/clientes', verificarToken, async (req: AuthRequest, res) => {
@@ -1736,8 +1747,11 @@ app.get('/api/powerbi/conversaciones', exportLimiter, verificarToken, async (req
   }
 })
 
-// Finalmente, servir archivos estáticos (login.html, app.js, styles.css, etc.)
-app.use(express.static(join(__dirname, '../../frontend/public')))
+// Servir archivos estáticos solo en desarrollo local
+if (process.env.NODE_ENV !== 'production') {
+  app.use(express.static(join(__dirname, '../../frontend/public')))
+  console.log('📁 Sirviendo archivos estáticos del frontend (solo desarrollo)')
+}
 
 // Iniciar servidor
 app.listen(PORT, () => {
