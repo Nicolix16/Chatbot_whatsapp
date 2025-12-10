@@ -22,6 +22,9 @@ const __dirname = dirname(__filename)
 const app = express()
 const PORT = 3009 // Puerto diferente al del bot
 
+// Trust proxy para Railway/Render (detrás de reverse proxy)
+app.set('trust proxy', 1)
+
 // Configurar multer para manejar archivos (imágenes de eventos)
 const upload = multer({
   storage: multer.memoryStorage(),
