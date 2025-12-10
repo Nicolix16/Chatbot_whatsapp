@@ -50,14 +50,14 @@ async function logout() {
     // Limpiar localStorage
     localStorage.clear()
     // Redirigir al login
-    window.location.href = 'login.html'
+    window.location.href = '/pages/login.html'
   }
 }
 
 // Proteger página (redirigir al login si no está autenticado)
 function requireAuth() {
   if (!isAuthenticated()) {
-    window.location.href = 'login.html'
+    window.location.href = '/pages/login.html'
     return false
   }
   return true

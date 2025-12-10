@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Avellano Chatbot</title>
-    <link rel="stylesheet" href="../css/styles-sidebar.css">
+    <link rel="stylesheet" href="/css/styles-sidebar.css">
 </head>
 <body>
     <div class="dashboard-wrapper">
@@ -12,7 +12,7 @@
         <aside class="sidebar">
             <div class="sidebar-top">
                 <div class="sidebar-logo">
-                    <img src="../assets/images/LOGO_AVELLANO.png" alt="Logo Avellano">
+                    <img src="/assets/images/LOGO_AVELLANO.png" alt="Logo Avellano">
                 </div>
                 <h2 class="sidebar-title">Avellano</h2>
             </div>
@@ -554,10 +554,10 @@ María López,maria@avellano.com,password456,soporte</pre>
         </div>
     </div>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/utils/helpers.js"></script>
-    <script src="../js/utils/auth.js"></script>
-    <script src="../js/utils/api.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/utils/helpers.js"></script>
+    <script src="/js/utils/auth.js"></script>
+    <script src="/js/utils/api.js"></script>
     <script>
         function selectNav(element) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -566,7 +566,7 @@ María López,maria@avellano.com,password456,soporte</pre>
 
         // Cargar script con cache busting
         const script = document.createElement('script');
-        script.src = '../js/app.js?v=' + Date.now();
+        script.src = '/js/app.js?v=' + Date.now();
         document.body.appendChild(script);
     </script>
 </body>

@@ -10,7 +10,7 @@ class ApiClient {
   async refreshAccessToken() {
     const refreshToken = localStorage.getItem('refresh_token')
     if (!refreshToken) {
-      window.location.href = 'login.html'
+      window.location.href = '/pages/login.html'
       return null
     }
     
@@ -35,13 +35,13 @@ class ApiClient {
         return json.accessToken
       } else {
         localStorage.clear()
-        window.location.href = 'login.html'
+        window.location.href = '/pages/login.html'
         return null
       }
     } catch (error) {
       console.error('Error renovando token:', error)
       localStorage.clear()
-      window.location.href = 'login.html'
+      window.location.href = '/pages/login.html'
       return null
     }
   }

@@ -92,7 +92,7 @@ async function login() {
     
     console.log('✅ Login exitoso - Usuario:', userData)
     
-    window.location.href = `index.html?token=${encodeURIComponent(json.accessToken)}`
+    window.location.href = `/?token=${encodeURIComponent(json.accessToken)}`
   } catch (e) {
     err.textContent = 'Error de red. Verifica tu conexión.'
   }
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
           showSuccess('loginSuccess', 'Ingreso exitoso. Redirigiendo...')
           setTimeout(() => {
-            window.location.href = `index.html?token=${encodeURIComponent(data.accessToken)}`
+            window.location.href = `/pages/?token=${encodeURIComponent(data.accessToken)}`
           }, 1000)
         } else {
           showError('loginError', data.error || 'Credenciales inválidas')

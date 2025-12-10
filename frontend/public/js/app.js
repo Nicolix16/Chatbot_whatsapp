@@ -12,7 +12,7 @@ function checkAuthentication() {
   
   if (!token || !userData) {
     // No hay token, redirigir al login
-    window.location.href = 'login.html'
+    window.location.href = '/pages/login.html'
     return false
   }
   
@@ -60,7 +60,7 @@ function initializeRoleBasedUI() {
   
   const user = getUserData()
   if (!user) {
-    window.location.href = 'login.html'
+    window.location.href = '/pages/login.html'
     return
   }
   
@@ -111,7 +111,7 @@ async function refreshAccessToken() {
   const refreshToken = localStorage.getItem('refresh_token')
   if (!refreshToken) {
     console.log('❌ No hay refresh token')
-    window.location.href = 'login.html'
+    window.location.href = '/pages/login.html'
     return null
   }
   
@@ -147,13 +147,13 @@ async function refreshAccessToken() {
     } else {
       console.log('❌ Error renovando token:', json.error)
       localStorage.clear()
-      window.location.href = 'login.html'
+      window.location.href = '/pages/login.html'
       return null
     }
   } catch (e) {
     console.error('❌ Error en refresh:', e)
     localStorage.clear()
-    window.location.href = 'login.html'
+    window.location.href = '/pages/login.html'
     return null
   }
 }
@@ -1995,7 +1995,7 @@ async function logout() {
     }
     
     localStorage.clear();
-    window.location.href = 'login.html';
+    window.location.href = '/pages/login.html';
 }
 
 // Cambiar entre tabs
