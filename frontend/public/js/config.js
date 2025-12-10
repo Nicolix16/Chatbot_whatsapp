@@ -1,8 +1,10 @@
 // Configuración del frontend
 const ENV = {
+  // Configura aquí la URL de tu backend desplegado
+  // Ejemplo: 'https://tu-backend.railway.app/api'
   API_URL: window.location.hostname === 'localhost' 
     ? 'http://localhost:3009/api'
-    : `${window.location.origin}/api`,
+    : 'TU_BACKEND_URL_AQUI/api', // ⚠️ CAMBIA ESTO por la URL real de tu backend
   
   WHATSAPP_URL: 'https://wa.me/',
   

@@ -1,10 +1,44 @@
+# Backend (no desplegar en Vercel)
+backend/
+backup_old_structure/
+shared/
+
+# Dependencies
 node_modules
 dist
+
+# Environment
 .env
 .env.local
+.env.production
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
 .DS_Store
+Thumbs.db
+
+# WhatsApp Bot (solo para backend)
 bot.qr.png
 baileys_store_*
 .wwebjs_auth
 .wwebjs_cache
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Docs
+README.md
+DEPLOYMENT.md
+ENV_CONFIG.md
+.env.example

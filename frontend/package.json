@@ -1,0 +1,16 @@
+{
+  "name": "chatbot-avellano-frontend",
+  "version": "1.0.0",
+  "description": "Panel de administración para Chatbot Avellano",
+  "scripts": {
+    "dev": "npx serve public -p 3000",
+    "build": "echo 'Static site - no build required'",
+    "vercel-build": "echo 'Static site - no build required'"
+  },
+  "keywords": ["dashboard", "chatbot", "avellano"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

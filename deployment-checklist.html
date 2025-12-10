@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist - Deployment Avellano</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .checklist {
+            list-style: none;
+        }
+        
+        .checklist li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        label {
+            cursor: pointer;
+            user-select: none;
+            flex: 1;
+        }
+        
+        .checked {
+            color: #888;
+            text-decoration: line-through;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .note strong {
+            color: #856404;
+        }
+        
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Checklist de Deployment</h1>
+        <p class="subtitle">Chatbot Avellano - Frontend en Vercel + Backend en Railway/Render</p>
+        
+        <div class="progress-text">Progreso: <span id="progress-percent">0%</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <!-- MONGODB -->
+        <div class="section">
+            <h2>🗄️ MongoDB Atlas</h2>
+            <ul class="checklist" data-group="mongodb">
+                <li>
+                    <input type="checkbox" id="mongo-1">
+                    <label for="mongo-1">Crear cuenta en <a href="https://www.mongodb.com/cloud/atlas" target="_blank" class="link">MongoDB Atlas</a></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="mongo-2">
+                    <label for="mongo-2">Crear cluster gratuito (M0)</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="mongo-3">
+                    <label for="mongo-3">Crear base de datos: <code>chatbot_avellano</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="mongo-4">
+                    <label for="mongo-4">Crear usuario con permisos de lectura/escritura</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="mongo-5">
+                    <label for="mongo-5">Network Access → Agregar IP: <code>0.0.0.0/0</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="mongo-6">
+                    <label for="mongo-6">Copiar connection string (MONGODB_URI)</label>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- BACKEND -->
+        <div class="section">
+            <h2>🖥️ Backend (Railway o Render)</h2>
+            <ul class="checklist" data-group="backend">
+                <li>
+                    <input type="checkbox" id="backend-1">
+                    <label for="backend-1">Crear cuenta en <a href="https://railway.app" target="_blank" class="link">Railway</a> o <a href="https://render.com" target="_blank" class="link">Render</a></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="backend-2">
+                    <label for="backend-2">Conectar repositorio de GitHub</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="backend-3">
+                    <label for="backend-3">Configurar Root Directory: <code>backend</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="backend-4">
+                    <label for="backend-4">Build Command: <code>npm install && npm run build:server</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="backend-5">
+                    <label for="backend-5">Start Command: <code>npm run start:dashboard</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="backend-6">
+                    <label for="backend-6">Agregar variables de entorno (ver <code>ENV_CONFIG.md</code>)</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="backend-7">
+                    <label for="backend-7">Copiar URL del backend desplegado</label>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- SENDGRID -->
+        <div class="section">
+            <h2>📧 SendGrid (Opcional)</h2>
+            <ul class="checklist" data-group="sendgrid">
+                <li>
+                    <input type="checkbox" id="sendgrid-1">
+                    <label for="sendgrid-1">Crear cuenta en <a href="https://sendgrid.com" target="_blank" class="link">SendGrid</a></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="sendgrid-2">
+                    <label for="sendgrid-2">Settings → API Keys → Create API Key</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="sendgrid-3">
+                    <label for="sendgrid-3">Copiar API Key (SENDGRID_API_KEY)</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="sendgrid-4">
+                    <label for="sendgrid-4">Sender Authentication → Verificar email/dominio</label>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- FRONTEND -->
+        <div class="section">
+            <h2>🎨 Frontend (Vercel)</h2>
+            <ul class="checklist" data-group="frontend">
+                <li>
+                    <input type="checkbox" id="frontend-1">
+                    <label for="frontend-1">Actualizar <code>frontend/public/js/config.js</code> con URL del backend</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="frontend-2">
+                    <label for="frontend-2">Commit y push cambios a GitHub</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="frontend-3">
+                    <label for="frontend-3">Ir a <a href="https://vercel.com" target="_blank" class="link">Vercel</a> → New Project</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="frontend-4">
+                    <label for="frontend-4">Importar repositorio de GitHub</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="frontend-5">
+                    <label for="frontend-5">Vercel detecta automáticamente <code>vercel.json</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="frontend-6">
+                    <label for="frontend-6">Deploy → Esperar build</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="frontend-7">
+                    <label for="frontend-7">Copiar URL de Vercel</label>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- CORS -->
+        <div class="section">
+            <h2>🔐 Configuración CORS</h2>
+            <ul class="checklist" data-group="cors">
+                <li>
+                    <input type="checkbox" id="cors-1">
+                    <label for="cors-1">Agregar URL de Vercel a <code>ALLOWED_ORIGINS</code> en backend</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="cors-2">
+                    <label for="cors-2">Reiniciar backend (Railway/Render)</label>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- TESTING -->
+        <div class="section">
+            <h2>🧪 Verificación</h2>
+            <ul class="checklist" data-group="testing">
+                <li>
+                    <input type="checkbox" id="test-1">
+                    <label for="test-1">Backend health: <code>https://tu-backend.railway.app/api/health</code></label>
+                </li>
+                <li>
+                    <input type="checkbox" id="test-2">
+                    <label for="test-2">Frontend carga correctamente en Vercel</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="test-3">
+                    <label for="test-3">Login funciona correctamente</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="test-4">
+                    <label for="test-4">Dashboard muestra datos de MongoDB</label>
+                </li>
+                <li>
+                    <input type="checkbox" id="test-5">
+                    <label for="test-5">No hay errores CORS en consola (F12)</label>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="note">
+            <strong>📚 Nota:</strong> Consulta <code>DEPLOYMENT.md</code> para instrucciones detalladas y <code>ENV_CONFIG.md</code> para las variables de entorno.
+        </div>
+        
+        <div class="footer">
+            <p>🚀 Una vez completado todo, tu aplicación estará en producción!</p>
+        </div>
+    </div>
+    
+    <script>
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const progressFill = document.getElementById('progress-fill');
+        const progressPercent = document.getElementById('progress-percent');
+        
+        // Cargar estado guardado
+        checkboxes.forEach(checkbox => {
+            const saved = localStorage.getItem(checkbox.id);
+            if (saved === 'true') {
+                checkbox.checked = true;
+                checkbox.nextElementSibling.classList.add('checked');
+            }
+            
+            checkbox.addEventListener('change', function() {
+                // Guardar estado
+                localStorage.setItem(this.id, this.checked);
+                
+                // Toggle clase
+                if (this.checked) {
+                    this.nextElementSibling.classList.add('checked');
+                } else {
+                    this.nextElementSibling.classList.remove('checked');
+                }
+                
+                updateProgress();
+            });
+        });
+        
+        function updateProgress() {
+            const total = checkboxes.length;
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const percent = Math.round((checked / total) * 100);
+            
+            progressFill.style.width = percent + '%';
+            progressPercent.textContent = percent + '%';
+        }
+        
+        // Inicializar progreso
+        updateProgress();
+    </script>
+</body>
+</html>
