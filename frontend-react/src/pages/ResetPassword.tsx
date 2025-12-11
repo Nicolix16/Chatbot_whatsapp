@@ -78,62 +78,60 @@ export const ResetPassword: React.FC = () => {
 
   return (
     <div className="reset-password-container">
-      {/* Left Sidebar */}
-      <div className="reset-password-left">
-        <div className="brand-section">
+      {/* Panel izquierdo con logo y menú */}
+      <div className="reset-password-sidebar">
+        <div className="sidebar-logo">
           <img 
-            src="/assets/logo.png" 
-            alt="Avellano" 
-            className="brand-logo"
+            src="/assets/images/Avellano.png" 
+            alt="Avellano - Alimentar es amar" 
             onError={(e) => {
-              e.currentTarget.style.display = 'none';
+              e.currentTarget.outerHTML = '<div style="color: #D1132A; font-size: 2.5rem; font-weight: 900;">Avellano</div>';
             }}
           />
-          <h1 className="brand-name">Avellano</h1>
         </div>
 
-        <div className="menu-items">
+        <div className="sidebar-menu">
           <div className="menu-item">
-            <MdLock className="menu-icon" size={24} />
-            <div className="menu-content">
-              <h3>Seguridad</h3>
-              <p>Tu nueva contraseña será encriptada</p>
+            <div className="menu-item-icon"><MdLock /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Seguridad</div>
+              <div className="menu-item-subtitle">Tu nueva contraseña será encriptada</div>
             </div>
           </div>
 
           <div className="menu-item">
-            <MdLayers className="menu-icon" size={24} />
-            <div className="menu-content">
-              <h3>Nueva Contraseña</h3>
-              <p>Crea una contraseña segura</p>
+            <div className="menu-item-icon"><MdLayers /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Nueva Contraseña</div>
+              <div className="menu-item-subtitle">Crea una contraseña segura</div>
             </div>
           </div>
 
           <div className="menu-item">
-            <MdFlashOn className="menu-icon" size={24} />
-            <div className="menu-content">
-              <h3>Acceso Inmediato</h3>
-              <p>Inicia sesión al terminar</p>
+            <div className="menu-item-icon"><MdFlashOn /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Acceso Inmediato</div>
+              <div className="menu-item-subtitle">Inicia sesión al terminar</div>
             </div>
           </div>
 
           <div className="menu-item">
-            <MdShield className="menu-icon" size={24} />
-            <div className="menu-content">
-              <h3>Protección</h3>
-              <p>Token de un solo uso</p>
+            <div className="menu-item-icon"><MdShield /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Protección</div>
+              <div className="menu-item-subtitle">Token de un solo uso</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Panel */}
-      <div className="reset-password-right">
-        <div className="reset-password-card">
-          <h1 className="reset-title">Restablecer Contraseña</h1>
-          <p className="reset-subtitle">
-            Ingresa tu nueva contraseña para acceder a tu cuenta
-          </p>
+      {/* Panel derecho con formulario */}
+      <div className="reset-password-form-panel">
+        <div className="reset-password-form-container">
+          <div className="reset-password-header">
+            <h1>Restablecer Contraseña</h1>
+            <p>Ingresa tu nueva contraseña para acceder a tu cuenta</p>
+          </div>
 
           {message && (
             <div className="success-message">
@@ -148,9 +146,9 @@ export const ResetPassword: React.FC = () => {
           )}
 
           {tokenValid ? (
-            <form className="reset-form" onSubmit={handleSubmit}>
+            <form className="reset-password-form" onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="password">Nueva Contraseña</label>
+                <label htmlFor="password">NUEVA CONTRASEÑA</label>
                 <input
                   type="password"
                   id="password"
@@ -163,7 +161,7 @@ export const ResetPassword: React.FC = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="confirmPassword">Confirmar Contraseña</label>
+                <label htmlFor="confirmPassword">CONFIRMAR CONTRASEÑA</label>
                 <input
                   type="password"
                   id="confirmPassword"
@@ -177,40 +175,35 @@ export const ResetPassword: React.FC = () => {
 
               <button 
                 type="submit" 
-                className="submit-btn"
+                className="reset-password-button"
                 disabled={isLoading}
               >
-                {isLoading ? 'Restableciendo...' : 'RESTABLECER CONTRASEÑA'}
+                {isLoading ? 'RESTABLECIENDO...' : 'RESTABLECER CONTRASEÑA'}
               </button>
 
-              <div className="back-to-login">
-                <button
-                  type="button"
-                  className="back-link"
-                  onClick={() => navigate('/login')}
-                >
-                  Volver a iniciar Sesión
-                </button>
+              <div className="reset-password-link">
+                <a onClick={() => navigate('/login')}>
+                  ← Volver a iniciar Sesión
+                </a>
               </div>
             </form>
           ) : (
             <div className="invalid-token">
               <p>El enlace de recuperación no es válido o ha expirado.</p>
-              <button
-                className="back-link"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Solicitar nuevo enlace
-              </button>
+              <div className="reset-password-link">
+                <a onClick={() => navigate('/forgot-password')}>
+                  Solicitar nuevo enlace
+                </a>
+              </div>
             </div>
           )}
 
-          <div className="security-note">
-            <p><strong>⚠️ Recomendaciones de seguridad:</strong></p>
+          <div className="reset-password-notice">
+            <p className="notice-title">⚠️ Recomendaciones de seguridad:</p>
             <p>• Usa al menos 6 caracteres</p>
             <p>• Combina letras, números y símbolos</p>
             <p>• No uses contraseñas obvias o comunes</p>
-            <p className="small-text">Este enlace expirará en 1 hora desde que fue generado.</p>
+            <p className="notice-footer">Este enlace expirará en 1 hora desde que fue generado.</p>
           </div>
         </div>
       </div>
