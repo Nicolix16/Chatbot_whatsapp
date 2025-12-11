@@ -4,6 +4,7 @@ import { MongoAdapter } from '@builderbot/database-mongo'
 import Cliente from '../models/Cliente.js'
 import Pedido from '../models/Pedido.js'
 import Conversacion from '../models/Conversacion.js'
+import { notificarNuevoPedido } from '../services/notificaciones.service.js'
 
 type Database = typeof MongoAdapter
 
@@ -274,6 +275,9 @@ export async function finalizarPedido(ctx: any, state: any, flowDynamic: any, ti
   
   const total = carrito.reduce((sum: number, item: any) => sum + item.subtotal, 0)
   
+  // Usar el tipo de negocio pasado como parámetro
+  const tipoCliente = tipoNegocio
+  
   // Obtener coordinador asignado
   const coordinador = obtenerCoordinador(cliente.tipoCliente, cliente.ciudad)
   
@@ -313,6 +317,18 @@ export async function finalizarPedido(ctx: any, state: any, flowDynamic: any, ti
   try {
     await nuevoPedido.save()
     console.log(`✅ Pedido guardado en BD: ${idPedido} - Total: $${total}`)
+    
+    // Notificar a los operadores correspondientes sobre el nuevo pedido
+    try {
+      await notificarNuevoPedido(
+        nuevoPedido._id.toString(),
+        tipoCliente,
+        tipoCliente === 'hogar' ? cliente.nombre : cliente.nombreNegocio
+      )
+    } catch (notifError) {
+      console.error('⚠️ Error enviando notificaciones de pedido:', notifError)
+      // No fallar el pedido si las notificaciones fallan
+    }
     
     // Guardar también en el historial de conversaciones
     await Conversacion.findOneAndUpdate(

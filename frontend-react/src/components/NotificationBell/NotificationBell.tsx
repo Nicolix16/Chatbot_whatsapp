@@ -1,204 +1,124 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { API_CONFIG } from '../../config/api';
 import './NotificationBell.css';
 
 interface Notification {
-  id: string;
-  type: 'clientes' | 'pedidos' | 'conversaciones' | 'eventos';
-  message: string;
-  timestamp: Date;
-  read: boolean;
+  _id: string;
+  tipo: 'nuevo_pedido' | 'usuario_desactivado' | 'usuario_eliminado';
+  mensaje: string;
+  referencia?: {
+    tipo: 'pedido' | 'usuario';
+    id: string;
+  };
+  leida: boolean;
+  createdAt: string;
 }
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [lastCounts, setLastCounts] = useState({
-    clientes: 0,
-    pedidos: 0,
-    conversaciones: 0,
-    eventos: 0
-  });
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isFirstLoad = useRef(true);
 
-  useEffect(() => {
-    // Verificación inicial (sin crear notificaciones)
-    checkForUpdates(true);
-    
-    // Verificar actualizaciones cada 15 segundos
-    const interval = setInterval(() => checkForUpdates(false), 15000);
-    
-    return () => clearInterval(interval);
-  }, [user]);
-
-  const checkForUpdates = async (isInitial: boolean = false) => {
+  // Cargar notificaciones del backend
+  const fetchNotifications = async () => {
     if (!user) return;
 
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      console.log('🔔 Verificando actualizaciones...', { isInitial, user: user.nombre });
+      console.log('🔔 Consultando notificaciones...');
 
-      // Obtener conteos actuales de cada endpoint
-      const [clientesRes, pedidosRes, conversacionesRes, eventosRes] = await Promise.all([
-        fetch(`${API_CONFIG.baseURL}/clientes`, { 
-          headers: { 'Authorization': `Bearer ${token}` } 
-        }).catch(() => ({ ok: false, json: async () => [] })),
-        fetch(`${API_CONFIG.baseURL}/pedidos`, { 
-          headers: { 'Authorization': `Bearer ${token}` } 
-        }).catch(() => ({ ok: false, json: async () => [] })),
-        fetch(`${API_CONFIG.baseURL}/conversaciones`, { 
-          headers: { 'Authorization': `Bearer ${token}` } 
-        }).catch(() => ({ ok: false, json: async () => [] })),
-        fetch(`${API_CONFIG.baseURL}/eventos`, { 
-          headers: { 'Authorization': `Bearer ${token}` } 
-        }).catch(() => ({ ok: false, json: async () => [] }))
-      ]);
-
-      let clientes: any[] = [];
-      let pedidos: any[] = [];
-      let conversaciones: any[] = [];
-      let eventos: any[] = [];
-
-      if (clientesRes.ok) {
-        clientes = await clientesRes.json();
-      }
-
-      if (pedidosRes.ok) {
-        pedidos = await pedidosRes.json();
-      }
-
-      if (conversacionesRes.ok) {
-        conversaciones = await conversacionesRes.json();
-      }
-
-      if (eventosRes.ok) {
-        eventos = await eventosRes.json();
-      }
-
-      const newCounts = {
-        clientes: Array.isArray(clientes) ? clientes.length : 0,
-        pedidos: Array.isArray(pedidos) ? pedidos.length : 0,
-        conversaciones: Array.isArray(conversaciones) ? conversaciones.length : 0,
-        eventos: Array.isArray(eventos) ? eventos.length : 0
-      };
-
-      console.log('📊 Conteos:', { 
-        anteriores: lastCounts, 
-        nuevos: newCounts,
-        isInitial,
-        isFirstLoad: isFirstLoad.current
+      const response = await fetch(`${API_CONFIG.baseURL}/notificaciones`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      // Si es la primera carga o recarga inicial, solo guardar conteos sin notificaciones
-      if (isInitial || isFirstLoad.current) {
-        console.log('✅ Primera carga - guardando conteos sin notificaciones');
-        setLastCounts(newCounts);
-        isFirstLoad.current = false;
-        return;
-      }
-
-      // Detectar nuevas actualizaciones solo si hay cambios
-      const newNotifications: Notification[] = [];
-
-      if (lastCounts.clientes > 0 && newCounts.clientes > lastCounts.clientes) {
-        const diff = newCounts.clientes - lastCounts.clientes;
-        console.log('🆕 Nuevos clientes detectados:', diff);
-        newNotifications.push({
-          id: `clientes-${Date.now()}`,
-          type: 'clientes',
-          message: `${diff} nuevo${diff > 1 ? 's' : ''} cliente${diff > 1 ? 's' : ''}`,
-          timestamp: new Date(),
-          read: false
-        });
-      }
-
-      if (lastCounts.pedidos > 0 && newCounts.pedidos > lastCounts.pedidos) {
-        const diff = newCounts.pedidos - lastCounts.pedidos;
-        console.log('🆕 Nuevos pedidos detectados:', diff);
-        newNotifications.push({
-          id: `pedidos-${Date.now()}`,
-          type: 'pedidos',
-          message: `${diff} nuevo${diff > 1 ? 's' : ''} pedido${diff > 1 ? 's' : ''}`,
-          timestamp: new Date(),
-          read: false
-        });
-      }
-
-      if (lastCounts.conversaciones > 0 && newCounts.conversaciones > lastCounts.conversaciones) {
-        const diff = newCounts.conversaciones - lastCounts.conversaciones;
-        newNotifications.push({
-          id: `conversaciones-${Date.now()}`,
-          type: 'conversaciones',
-          message: `${diff} nueva${diff > 1 ? 's' : ''} conversación${diff > 1 ? 'es' : ''}`,
-          timestamp: new Date(),
-          read: false
-        });
-      }
-
-      if (lastCounts.eventos > 0 && newCounts.eventos > lastCounts.eventos) {
-        const diff = newCounts.eventos - lastCounts.eventos;
-        newNotifications.push({
-          id: `eventos-${Date.now()}`,
-          type: 'eventos',
-          message: `${diff} nuevo${diff > 1 ? 's' : ''} evento${diff > 1 ? 's' : ''}`,
-          timestamp: new Date(),
-          read: false
-        });
-      }
-
-      if (newNotifications.length > 0) {
-        console.log('🔔 Creando notificaciones:', newNotifications);
-        setNotifications(prev => [...newNotifications, ...prev].slice(0, 10)); // Mantener solo las últimas 10
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📬 Respuesta de notificaciones:', data);
+        
+        if (data.success && Array.isArray(data.data)) {
+          setNotifications(data.data);
+          console.log(`✅ ${data.data.length} notificaciones cargadas, ${data.data.filter((n: any) => !n.leida).length} no leídas`);
+        }
       } else {
-        console.log('⚪ No hay nuevas notificaciones');
+        console.error('❌ Error en respuesta:', response.status, response.statusText);
       }
-
-      setLastCounts(newCounts);
     } catch (error) {
-      console.error('❌ Error en checkForUpdates:', error);
-      console.error('Error checking for updates:', error);
+      console.error('❌ Error cargando notificaciones:', error);
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    // Marcar como leída
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-    );
+  useEffect(() => {
+    // Cargar notificaciones inicialmente
+    fetchNotifications();
+    
+    // Verificar notificaciones cada 10 segundos
+    const interval = setInterval(fetchNotifications, 10000);
+    
+    return () => clearInterval(interval);
+  }, [user]);
 
-    // Navegar al panel correspondiente
-    navigate(`/dashboard/${notification.type}`);
-    setShowDropdown(false);
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Marcar como leída en el backend
+      await fetch(`${API_CONFIG.baseURL}/notificaciones/${notification._id}/leer`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      // Actualizar localmente
+      setNotifications(prev =>
+        prev.map(n => n._id === notification._id ? { ...n, leida: true } : n)
+      );
+
+      // Navegar según el tipo de notificación
+      if (notification.tipo === 'nuevo_pedido') {
+        navigate('/dashboard/pedidos');
+      } else if (notification.tipo === 'usuario_desactivado' || notification.tipo === 'usuario_eliminado') {
+        navigate('/dashboard/usuarios');
+      }
+      
+      setShowDropdown(false);
+    } catch (error) {
+      console.error('Error marcando notificación:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await fetch(`${API_CONFIG.baseURL}/notificaciones/leer-todas`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      // Actualizar localmente
+      setNotifications(prev => prev.map(n => ({ ...n, leida: true })));
+    } catch (error) {
+      console.error('Error marcando todas como leídas:', error);
+    }
   };
 
-  const clearAll = () => {
-    setNotifications([]);
-    setShowDropdown(false);
-  };
+  const unreadCount = notifications.filter(n => !n.leida).length;
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (tipo: string) => {
     const icons = {
-      clientes: '👥',
-      pedidos: '📦',
-      conversaciones: '💬',
-      eventos: '📢'
+      nuevo_pedido: '📦',
+      usuario_desactivado: '⚠️',
+      usuario_eliminado: '🗑️'
     };
-    return icons[type as keyof typeof icons] || '🔔';
+    return icons[tipo as keyof typeof icons] || '🔔';
   };
 
-  const formatTime = (date: Date) => {
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // segundos
 
@@ -235,9 +155,6 @@ export function NotificationBell() {
                   <button onClick={markAllAsRead} className="mark-read-btn">
                     Marcar todas
                   </button>
-                  <button onClick={clearAll} className="clear-all-btn">
-                    Limpiar
-                  </button>
                 </div>
               )}
             </div>
@@ -253,18 +170,18 @@ export function NotificationBell() {
               ) : (
                 notifications.map(notification => (
                   <div
-                    key={notification.id}
-                    className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                    key={notification._id}
+                    className={`notification-item ${notification.leida ? 'read' : 'unread'}`}
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="notification-icon">
-                      {getNotificationIcon(notification.type)}
+                      {getNotificationIcon(notification.tipo)}
                     </div>
                     <div className="notification-content">
-                      <div className="notification-message">{notification.message}</div>
-                      <div className="notification-time">{formatTime(notification.timestamp)}</div>
+                      <div className="notification-message">{notification.mensaje}</div>
+                      <div className="notification-time">{formatTime(notification.createdAt)}</div>
                     </div>
-                    {!notification.read && <div className="notification-dot"></div>}
+                    {!notification.leida && <div className="notification-dot"></div>}
                   </div>
                 ))
               )}

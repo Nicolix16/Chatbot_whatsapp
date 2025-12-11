@@ -2,6 +2,7 @@ import { Router, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import Usuario from '../models/Usuario.js'
 import { verificarToken, soloAdmin, adminOSoporte, AuthRequest } from '../middleware/auth.js'
+import { notificarUsuarioDesactivado, notificarUsuarioEliminado } from '../services/notificaciones.service.js'
 
 const router = Router()
 
@@ -184,6 +185,13 @@ router.patch('/:id/estado', verificarToken, soloAdmin, async (req: AuthRequest, 
   try {
     const { activo } = req.body
     
+    // Obtener el usuario antes de actualizarlo para tener su información
+    const usuarioAntes = await Usuario.findById(req.params.id)
+    
+    if (!usuarioAntes) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    
     const user = await Usuario.findByIdAndUpdate(
       req.params.id,
       { activo, updatedAt: new Date() },
@@ -192,6 +200,16 @@ router.patch('/:id/estado', verificarToken, soloAdmin, async (req: AuthRequest, 
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    
+    // Si se está desactivando un usuario, notificar a los administradores
+    if (!activo && usuarioAntes.activo) {
+      try {
+        await notificarUsuarioDesactivado(user.email, user.nombre)
+      } catch (notifError) {
+        console.error('⚠️ Error enviando notificación de desactivación:', notifError)
+        // No fallar la operación si la notificación falla
+      }
     }
     
     res.json({ success: true, data: user })
@@ -203,10 +221,27 @@ router.patch('/:id/estado', verificarToken, soloAdmin, async (req: AuthRequest, 
 // Eliminar usuario (solo admin)
 router.delete('/:id', verificarToken, soloAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const user = await Usuario.findByIdAndDelete(req.params.id)
+    const user = await Usuario.findById(req.params.id)
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
+    }
+    
+    // Guardar información del usuario antes de eliminarlo
+    const usuarioInfo = {
+      email: user.email,
+      nombre: user.nombre
+    }
+    
+    // Eliminar el usuario
+    await Usuario.findByIdAndDelete(req.params.id)
+    
+    // Notificar a los administradores sobre la eliminación
+    try {
+      await notificarUsuarioEliminado(usuarioInfo.email, usuarioInfo.nombre)
+    } catch (notifError) {
+      console.error('⚠️ Error enviando notificación de eliminación:', notifError)
+      // No fallar la operación si la notificación falla
     }
     
     res.json({ success: true, message: 'Usuario eliminado exitosamente' })
