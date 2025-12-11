@@ -519,10 +519,18 @@ export const verCatalogoFlow = addKeyword<Provider, Database>([
     }
     
     // Si el usuario quiere cancelar
-    if (texto.includes('cancelar')) {
+    if (texto.includes('cancelar') || buttonReply.includes('cancelar')) {
       console.log('[verCatalogoFlow] Usuario canceló el pedido')
       await state.update({ carrito: [], esperandoPedido: false })
-      await flowDynamic('❌ Pedido cancelado. ¿En qué más puedo ayudarte?')
+      
+      await flowDynamic([
+        {
+          body: '❌ Pedido cancelado. ¿Qué deseas hacer ahora?',
+          buttons: [
+            { body: 'Volver menú' },
+          ]
+        }
+      ])
       return
     }
     
@@ -589,10 +597,18 @@ export const capturarProductosContinuoFlow = addKeyword<Provider, Database>(['CA
     }
     
     // Si el usuario quiere cancelar
-    if (texto.includes('cancelar')) {
+    if (texto.includes('cancelar') || buttonReply.includes('cancelar')) {
       console.log('[capturarProductosContinuoFlow] Usuario canceló el pedido')
       await state.update({ carrito: [], esperandoPedido: false })
-      await flowDynamic('❌ Pedido cancelado. ¿En qué más puedo ayudarte?')
+      
+      await flowDynamic([
+        {
+          body: '❌ Pedido cancelado. ¿Qué deseas hacer ahora?',
+          buttons: [
+            { body: 'Volver menú' },
+          ]
+        }
+      ])
       // Terminar sin redirigir
       return
     }

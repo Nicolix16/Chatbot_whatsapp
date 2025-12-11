@@ -14,7 +14,8 @@ const RESPONSABLE_MAP: Record<string, string> = {
   'coordinador_masivos': 'Coordinador de Masivos',
   'director_comercial': 'Director Comercial',
   'ejecutivo_horecas': 'Ejecutivo Horecas',
-  'mayorista': 'Coordinador Mayoristas'
+  'mayorista': 'Coordinador Mayoristas',
+  'encargado_hogares': 'Encargado Hogares'
 };
 
 export function ClienteDetalle({ telefono, onClose }: ClienteDetalleProps) {

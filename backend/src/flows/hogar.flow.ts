@@ -286,17 +286,10 @@ export const hacerPedidoFlow = addKeyword<Provider, Database>([
     carrito: []
   })
   
-  await flowDynamic([
-    '🛒 *Vamos a crear tu pedido hogar*',
-    '',
-    'Por favor indica qué productos deseas.',
-    '',
-    '*Formato:* cantidad producto',
-    '*Ejemplo:* 2 Pollo Entero, 3 Alitas, 1 Pechuga',
-    '',
-    '✅ Escribe *"Finalizar"* cuando termines',
-    '❌ Escribe *"Cancelar"* para cancelar',
-  ].join('\n'))
+  // Importar y mostrar catálogo para hogar
+  const { mostrarCatalogo } = await import('./catalogo.flow.js')
+  await mostrarCatalogo(ctx, flowDynamic, 'hogar')
+  await state.update({ esperandoPedido: true })
 })
 .addAnswer(
   '',
@@ -352,10 +345,18 @@ export const hacerPedidoFlow = addKeyword<Provider, Database>([
     }
     
     // Si el usuario quiere cancelar
-    if (texto.includes('cancelar')) {
+    if (texto.includes('cancelar') || buttonReply.includes('cancelar')) {
       console.log('[hacerPedidoFlow] Usuario canceló el pedido')
       await state.update({ carrito: [], esperandoPedido: false, tipoCliente: null, tipoNegocio: null })
-      await flowDynamic('❌ Pedido cancelado. ¿En qué más puedo ayudarte?')
+      
+      await flowDynamic([
+        {
+          body: '❌ Pedido cancelado. ¿Qué deseas hacer ahora?',
+          buttons: [
+            { body: 'Volver menú' },
+          ]
+        }
+      ])
       return
     }
     
