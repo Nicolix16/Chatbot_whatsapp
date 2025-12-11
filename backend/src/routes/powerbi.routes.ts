@@ -87,7 +87,7 @@ router.get('/clientes', verificarToken, async (req: AuthRequest, res: Response) 
     
     // Solo admin puede ver todos los clientes
     // Cada operador solo ve sus clientes asignados según su tipoOperador
-    if (req.user!.rol !== 'admin' && req.user!.tipoOperador) {
+    if (req.user!.rol !== 'administrador' && req.user!.tipoOperador) {
       filtro = { responsable: req.user!.tipoOperador }
     }
     
@@ -131,7 +131,7 @@ router.get('/pedidos', verificarToken, async (req: AuthRequest, res: Response) =
     
     // Solo admin puede ver todos los pedidos
     // Cada operador solo ve pedidos de sus clientes asignados
-    if (req.user!.rol !== 'admin' && req.user!.tipoOperador) {
+    if (req.user!.rol !== 'administrador' && req.user!.tipoOperador) {
       const clientesAsignados = await Cliente.find({ responsable: req.user!.tipoOperador }, { telefono: 1 }).lean()
       const telefonos = clientesAsignados.map(c => c.telefono)
       
@@ -320,7 +320,7 @@ router.get('/estadisticas', verificarToken, async (req: AuthRequest, res: Respon
 router.get('/usuarios', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
     // Solo admin puede exportar usuarios
-    if (req.user!.rol !== 'admin') {
+    if (req.user!.rol !== 'administrador') {
       return res.status(403).json({
         success: false,
         error: 'No tienes permisos para exportar usuarios'
