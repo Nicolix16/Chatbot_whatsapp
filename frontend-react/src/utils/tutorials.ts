@@ -76,12 +76,6 @@ export const startCompleteTutorial = (userRole: UserRole) => {
         title: 'Exportar Datos',
         description: 'Desde cualquier sección puedes exportar los datos a Excel para análisis externos o reportes.'
       }
-    },
-    {
-      popover: {
-        title: 'Tutorial Completado',
-        description: 'Ya conoces las principales secciones del dashboard. Usa el botón de ayuda en cualquier momento para ver tutoriales específicos de cada sección.'
-      }
     }
   );
 
@@ -132,12 +126,6 @@ export const startClientesTutorial = () => {
           title: 'Exportar a Excel',
           description: 'Exporta la lista de clientes a Excel para análisis externos o respaldos.'
         }
-      },
-      {
-        popover: {
-          title: 'Tutorial Completado',
-          description: 'Ya sabes cómo gestionar y consultar clientes en el sistema.'
-        }
       }
     ]
   });
@@ -184,12 +172,6 @@ export const startPedidosTutorial = () => {
           title: 'Exportar Pedidos',
           description: 'Exporta los pedidos filtrados a Excel para análisis externos o reportes.'
         }
-      },
-      {
-        popover: {
-          title: 'Tutorial Completado',
-          description: 'Ya sabes cómo consultar, filtrar y gestionar pedidos en el sistema.'
-        }
       }
     ]
   });
@@ -235,12 +217,6 @@ export const startConversacionesTutorial = () => {
         popover: {
           title: 'Exportar Conversaciones',
           description: 'Exporta el historial de conversaciones a Excel para análisis o respaldos.'
-        }
-      },
-      {
-        popover: {
-          title: 'Tutorial Completado',
-          description: 'Ya puedes consultar y analizar las conversaciones con tus clientes.'
         }
       }
     ]
@@ -295,12 +271,6 @@ export const startEventosTutorial = () => {
           title: 'Exportar Eventos',
           description: 'Exporta la lista de eventos a Excel para análisis o respaldos.'
         }
-      },
-      {
-        popover: {
-          title: 'Tutorial Completado',
-          description: 'Ya sabes cómo crear y gestionar eventos para mensajería masiva.'
-        }
       }
     ]
   });
@@ -353,12 +323,6 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: 'Exportar Usuarios',
           description: 'Exporta la lista de usuarios a Excel para análisis o respaldos.'
-        }
-      },
-      {
-        popover: {
-          title: 'Tutorial Completado',
-          description: 'Ya puedes administrar usuarios y controlar el acceso al sistema.'
         }
       }
     ]

@@ -195,13 +195,13 @@ export function ConversacionDetalle({ telefono, onClose }: ConversacionDetallePr
                               {pedido.historialEstados.map((cambio, idx) => {
                                 const est = ESTADO_MAP[cambio.estado];
                                 return (
-                                  <div key={idx} className="timeline-item-mini">
-                                    <div
-                                      className="timeline-marker-mini"
-                                      style={{ background: est.color }}
-                                    >
-                                      {est.icon}
-                                    </div>
+                                <div key={idx} className="timeline-item-mini">
+                                  <div
+                                    className="timeline-marker-mini"
+                                    style={{ background: est.color }}
+                                  >
+                                    {est.iconSvg}
+                                  </div>
                                     <div className="timeline-content-mini">
                                       <div style={{ color: est.color, fontWeight: 600 }}>
                                         {est.label}
