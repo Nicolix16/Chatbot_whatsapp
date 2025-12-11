@@ -572,13 +572,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await user.save()
     console.log('✅ Token guardado en la base de datos')
 
-    // Construir URL de reseteo - usar FRONTEND_URL en producción
+    // Construir URL de reseteo - usar FRONTEND_URL en producción (v2)
     const frontendUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:5173'
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`
     
     console.log('🔐 Token de recuperación generado exitosamente')
-    console.log('🌐 Frontend URL configurada:', frontendUrl)
-    console.log('🔗 URL de reseteo:', resetUrl)
+    console.log('🌐 [v2] Frontend URL configurada:', frontendUrl)
+    console.log('🔗 [v2] URL de reseteo:', resetUrl)
 
     // Enviar email con SendGrid
     console.log('📧 Verificando configuración de SendGrid...')
