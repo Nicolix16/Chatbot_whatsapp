@@ -198,7 +198,7 @@ export interface FilterOptions {
 }
 
 // Tipos para exportación
-export type ExportType = 'clientes' | 'pedidos' | 'conversaciones' | 'estadisticas' | 'eventos';
+export type ExportType = 'clientes' | 'pedidos' | 'conversaciones' | 'usuarios' | 'estadisticas' | 'eventos';
 
 export interface ExportOptions {
   type: ExportType;

@@ -69,6 +69,7 @@ export const API_ENDPOINTS = {
     CLIENTES: '/powerbi/clientes',
     PEDIDOS: '/powerbi/pedidos',
     CONVERSACIONES: '/powerbi/conversaciones',
+    USUARIOS: '/powerbi/usuarios',
     ESTADISTICAS: '/powerbi/estadisticas',
     EVENTOS: '/powerbi/eventos',
   },

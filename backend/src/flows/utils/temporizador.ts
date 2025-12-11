@@ -6,7 +6,7 @@ import { dirname } from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const TIEMPO_INACTIVIDAD = 60 * 1000 * 10 // 10 minutos
+const TIEMPO_INACTIVIDAD = 60 * 1000 * 5 // 10 minutos
 
 const IMAGEN_URL = 'https://res.cloudinary.com/dualljdpg/image/upload/v1765326331/Avelino_jlga3c.jpg'
 

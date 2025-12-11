@@ -11,7 +11,7 @@ class ExportService {
     const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     // Determinar la extensión según el formato
-    const extension = format === 'excel' ? 'xlsx' : 'pbix';
+    const extension = format === 'excel' ? 'xlsx' : 'json';
 
     switch (type) {
       case 'clientes':
@@ -25,6 +25,10 @@ class ExportService {
       case 'conversaciones':
         endpoint = `${API_ENDPOINTS.EXPORT.CONVERSACIONES}?format=${format}`;
         filename = `conversaciones_${timestamp}.${extension}`;
+        break;
+      case 'usuarios':
+        endpoint = `${API_ENDPOINTS.EXPORT.USUARIOS}?format=${format}`;
+        filename = `usuarios_${timestamp}.${extension}`;
         break;
       case 'estadisticas':
         endpoint = `${API_ENDPOINTS.EXPORT.ESTADISTICAS}?format=${format}`;

@@ -2,7 +2,9 @@ import { Router, Response } from 'express'
 import Cliente from '../models/Cliente.js'
 import Pedido from '../models/Pedido.js'
 import Conversacion from '../models/Conversacion.js'
+import Usuario from '../models/Usuario.js'
 import { verificarToken, AuthRequest } from '../middleware/auth.js'
+import { ExportService } from '../services/export.service.js'
 
 const router = Router()
 
@@ -80,21 +82,38 @@ router.get('/stats', verificarToken, async (req: AuthRequest, res: Response) => 
 // Endpoint para exportar clientes (Power BI)
 router.get('/clientes', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
+    const format = req.query.format as string || 'powerbi'
     let filtro: any = {}
     
-    // Filtrar por tipo de operador
-    if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
+    // Solo admin puede ver todos los clientes
+    // Cada operador solo ve sus clientes asignados según su tipoOperador
+    if (req.user!.rol !== 'admin' && req.user!.tipoOperador) {
       filtro = { responsable: req.user!.tipoOperador }
     }
     
     const clientes = await Cliente.find(filtro).lean()
     
-    res.json({
+    // Si el formato es Excel, generar archivo
+    if (format === 'excel') {
+      const processedData = ExportService.processClientesData(clientes)
+      const columns = ExportService.getClientesColumns()
+      const filename = `clientes_${new Date().toISOString().split('T')[0]}.xlsx`
+      
+      return ExportService.exportToExcel(processedData, columns, filename, res)
+    }
+    
+    // Formato Power BI (JSON descargable)
+    const jsonData = {
       success: true,
       total: clientes.length,
       fecha_exportacion: new Date().toISOString(),
       data: clientes
-    })
+    }
+    
+    const filename = `clientes_${new Date().toISOString().split('T')[0]}.json`
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(JSON.stringify(jsonData, null, 2))
   } catch (error) {
     console.error('Error exportando clientes:', error)
     res.status(500).json({
@@ -107,10 +126,12 @@ router.get('/clientes', verificarToken, async (req: AuthRequest, res: Response) 
 // Endpoint para exportar pedidos (Power BI)
 router.get('/pedidos', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
+    const format = req.query.format as string || 'powerbi'
     let pedidos = []
     
-    // Si es operador, filtrar por clientes asignados
-    if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
+    // Solo admin puede ver todos los pedidos
+    // Cada operador solo ve pedidos de sus clientes asignados
+    if (req.user!.rol !== 'admin' && req.user!.tipoOperador) {
       const clientesAsignados = await Cliente.find({ responsable: req.user!.tipoOperador }, { telefono: 1 }).lean()
       const telefonos = clientesAsignados.map(c => c.telefono)
       
@@ -121,12 +142,27 @@ router.get('/pedidos', verificarToken, async (req: AuthRequest, res: Response) =
       pedidos = await Pedido.find({}).lean()
     }
     
-    res.json({
+    // Si el formato es Excel, generar archivo
+    if (format === 'excel') {
+      const processedData = ExportService.processPedidosData(pedidos)
+      const columns = ExportService.getPedidosColumns()
+      const filename = `pedidos_${new Date().toISOString().split('T')[0]}.xlsx`
+      
+      return ExportService.exportToExcel(processedData, columns, filename, res)
+    }
+    
+    // Formato Power BI (JSON descargable)
+    const jsonData = {
       success: true,
       total: pedidos.length,
       fecha_exportacion: new Date().toISOString(),
       data: pedidos
-    })
+    }
+    
+    const filename = `pedidos_${new Date().toISOString().split('T')[0]}.json`
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(JSON.stringify(jsonData, null, 2))
   } catch (error) {
     console.error('Error exportando pedidos:', error)
     res.status(500).json({
@@ -139,14 +175,30 @@ router.get('/pedidos', verificarToken, async (req: AuthRequest, res: Response) =
 // Endpoint para exportar conversaciones (Power BI)
 router.get('/conversaciones', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
+    const format = req.query.format as string || 'powerbi'
     const conversaciones = await Conversacion.find({}).lean()
     
-    res.json({
+    // Si el formato es Excel, generar archivo
+    if (format === 'excel') {
+      const processedData = ExportService.processConversacionesData(conversaciones)
+      const columns = ExportService.getConversacionesColumns()
+      const filename = `conversaciones_${new Date().toISOString().split('T')[0]}.xlsx`
+      
+      return ExportService.exportToExcel(processedData, columns, filename, res)
+    }
+    
+    // Formato Power BI (JSON descargable)
+    const jsonData = {
       success: true,
       total: conversaciones.length,
       fecha_exportacion: new Date().toISOString(),
       data: conversaciones
-    })
+    }
+    
+    const filename = `conversaciones_${new Date().toISOString().split('T')[0]}.json`
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(JSON.stringify(jsonData, null, 2))
   } catch (error) {
     console.error('Error exportando conversaciones:', error)
     res.status(500).json({
@@ -159,6 +211,7 @@ router.get('/conversaciones', verificarToken, async (req: AuthRequest, res: Resp
 // Endpoint para exportar estadísticas agregadas (Power BI)
 router.get('/estadisticas', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
+    const format = req.query.format as string || 'powerbi'
     let filtroClientes: any = {}
     
     // Filtrar por tipo de operador
@@ -223,25 +276,86 @@ router.get('/estadisticas', verificarToken, async (req: AuthRequest, res: Respon
       { $sort: { '_id.año': 1, '_id.mes': 1 } }
     ])
     
-    res.json({
+    const estadisticasData = {
+      clientes: {
+        total: totalClientes,
+        por_tipo: clientesPorTipo
+      },
+      pedidos: {
+        por_estado: estadisticasPedidos,
+        por_mes: pedidosPorMes
+      }
+    }
+    
+    // Si el formato es Excel, generar archivo
+    if (format === 'excel') {
+      const processedData = ExportService.processEstadisticasData(estadisticasData)
+      const columns = ExportService.getEstadisticasColumns()
+      const filename = `estadisticas_${new Date().toISOString().split('T')[0]}.xlsx`
+      
+      return ExportService.exportToExcel(processedData, columns, filename, res)
+    }
+    
+    // Formato Power BI (JSON descargable)
+    const jsonData = {
       success: true,
       fecha_exportacion: new Date().toISOString(),
-      data: {
-        clientes: {
-          total: totalClientes,
-          por_tipo: clientesPorTipo
-        },
-        pedidos: {
-          por_estado: estadisticasPedidos,
-          por_mes: pedidosPorMes
-        }
-      }
-    })
+      data: estadisticasData
+    }
+    
+    const filename = `estadisticas_${new Date().toISOString().split('T')[0]}.json`
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(JSON.stringify(jsonData, null, 2))
   } catch (error) {
     console.error('Error exportando estadísticas:', error)
     res.status(500).json({
       success: false,
       error: 'Error exportando estadísticas para Power BI'
+    })
+  }
+})
+
+// Endpoint para exportar usuarios (solo admin)
+router.get('/usuarios', verificarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    // Solo admin puede exportar usuarios
+    if (req.user!.rol !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'No tienes permisos para exportar usuarios'
+      })
+    }
+
+    const format = req.query.format as string || 'powerbi'
+    const usuarios = await Usuario.find({}).select('-password').lean()
+    
+    // Si el formato es Excel, generar archivo
+    if (format === 'excel') {
+      const processedData = ExportService.processUsuariosData(usuarios)
+      const columns = ExportService.getUsuariosColumns()
+      const filename = `usuarios_${new Date().toISOString().split('T')[0]}.xlsx`
+      
+      return ExportService.exportToExcel(processedData, columns, filename, res)
+    }
+    
+    // Formato Power BI (JSON descargable)
+    const jsonData = {
+      success: true,
+      total: usuarios.length,
+      fecha_exportacion: new Date().toISOString(),
+      data: usuarios
+    }
+    
+    const filename = `usuarios_${new Date().toISOString().split('T')[0]}.json`
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(JSON.stringify(jsonData, null, 2))
+  } catch (error) {
+    console.error('Error exportando usuarios:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Error exportando usuarios'
     })
   }
 })

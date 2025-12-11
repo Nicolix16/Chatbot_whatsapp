@@ -78,20 +78,20 @@
 }
 
 .close-dropdown {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
   border: none;
   color: white;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: auto;
+  height: auto;
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.2s;
+  padding: 0;
 }
 
 .close-dropdown:hover {
-  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.2);
 }
 
 .export-options {
