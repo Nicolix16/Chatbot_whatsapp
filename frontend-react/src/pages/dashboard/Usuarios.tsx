@@ -188,17 +188,18 @@ export function Usuarios() {
         for (let i = 1; i < lines.length; i++) {
           const values = lines[i].split(',').map(v => v.trim());
           if (values.length >= 4) {
+            const rolCSV = values[3];
+            
+            // Mapear roles del CSV al formato del backend
+            const rolesOperadores = ['mayorista', 'director_comercial', 'coordinador_masivos', 'ejecutivo_horecas'];
+            
             const usuario: any = {
               nombre: values[0],
               email: values[1],
               password: values[2],
-              rol: values[3]
+              rol: rolesOperadores.includes(rolCSV) ? 'operador' : rolCSV,
+              tipoOperador: rolesOperadores.includes(rolCSV) ? rolCSV : undefined
             };
-            
-            // Si es operador y hay tipoOperador
-            if (values[3] === 'operador' && values[4]) {
-              usuario.tipoOperador = values[4];
-            }
             
             usuarios.push(usuario);
           }
