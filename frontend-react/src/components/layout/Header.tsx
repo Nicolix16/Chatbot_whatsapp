@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { exportService } from '../../services/export.service';
+import { HelpButton } from '../HelpButton/HelpButton';
 import type { ExportType } from '../../types';
 import './Header.css';
 
@@ -140,6 +141,8 @@ export function Header() {
             </div>
           )}
         </div>
+        
+        <HelpButton />
       </div>
     </header>
   );
