@@ -43,6 +43,13 @@ const CATALOGO = {
     { nombre: 'Cortes Premium (kg)', precio: 35000 },
     { nombre: 'Alitas Premium (kg)', precio: 25000 },
   ],
+  hogar: [
+    { nombre: 'Pollo Entero', precio: 20000 },
+    { nombre: 'Presas Mixtas (kg)', precio: 19000 },
+    { nombre: 'Pechuga (kg)', precio: 23000 },
+    { nombre: 'Muslos (kg)', precio: 17000 },
+    { nombre: 'Alitas (kg)', precio: 15000 },
+  ],
 }
 
 // Función para obtener contacto del coordinador
@@ -130,12 +137,23 @@ Por favor, contactar al cliente para coordinar la entrega.`
 export async function mostrarCatalogo(ctx: any, flowDynamic: any, tipoCliente: string) {
   const catalogo = CATALOGO[tipoCliente as keyof typeof CATALOGO] || CATALOGO.tienda
   
+  // Determinar el título según el tipo de cliente
+  const titulosTipo: Record<string, string> = {
+    'mayorista': 'MAYORISTA',
+    'tienda': 'TIENDA',
+    'asadero': 'ASADERO',
+    'restaurante_estandar': 'RESTAURANTE ESTÁNDAR',
+    'restaurante_premium': 'RESTAURANTE PREMIUM',
+    'hogar': 'HOGAR'
+  }
+  const titulo = titulosTipo[tipoCliente] || 'TIENDA'
+  
   const listaCatalogo = catalogo
     .map((p, i) => `${i + 1}. ${p.nombre} - $${p.precio.toLocaleString('es-CO')}`)
     .join('\n')
   
   await flowDynamic([
-    `📋 *CATÁLOGO - TIENDA*`,
+    `📋 *CATÁLOGO - ${titulo}*`,
     '',
     listaCatalogo,
     '',

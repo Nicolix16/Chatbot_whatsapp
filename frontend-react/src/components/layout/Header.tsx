@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { exportService } from '../../services/export.service';
 import { HelpButton } from '../HelpButton/HelpButton';
+import { NotificationBell } from '../NotificationBell/NotificationBell';
 import type { ExportType } from '../../types';
 import './Header.css';
 
@@ -142,6 +143,7 @@ export function Header() {
           )}
         </div>
         
+        <NotificationBell />
         <HelpButton />
       </div>
     </header>

@@ -102,7 +102,23 @@ export const hogarFlow = addKeyword<Provider, Database>([
       let cliente = await Cliente.findOne({ telefono: user })
       
       if (cliente) {
-        cliente.tipoCliente = 'hogar'
+        // Si el cliente ya existe con otro tipo, no sobrescribir - crear alerta
+        if (cliente.tipoCliente && cliente.tipoCliente !== 'hogar') {
+          await flowDynamic([
+            '⚠️ *ATENCIÓN*',
+            '',
+            `Ya estás registrado como cliente *${cliente.tipoCliente}*.`,
+            '',
+            'Si deseas cambiar tu tipo de cliente a Hogar, contacta con soporte:',
+            '📞 https://wa.me/573102325151',
+            '',
+            'Mientras tanto, puedes usar tu cuenta actual.',
+          ].join('\n'))
+          await state.update({ esperandoDatosHogar: false })
+          return
+        }
+        
+        // Si ya es hogar, solo actualizar datos
         cliente.nombre = nombre
         cliente.ciudad = ciudad
         cliente.direccion = direccion
