@@ -17,7 +17,9 @@
     "seed:pedidos": "tsx --env-file=.env ./src/scripts/seedPedidos.ts",
     "seed:pedidos:delete": "tsx --env-file=.env ./src/scripts/seedPedidos.ts --delete",
     "migrate:clientes": "tsx --env-file=.env ./src/scripts/migrateClientes.ts",
-    "crear:encargado-hogares": "tsx --env-file=.env ./src/scripts/crearEncargadoHogares.ts"
+    "crear:encargado-hogares": "tsx --env-file=.env ./src/scripts/crearEncargadoHogares.ts",
+    "verificar:usuarios": "tsx --env-file=.env ./src/scripts/verificarUsuariosNotificaciones.ts",
+    "probar:notificaciones": "tsx --env-file=.env ./src/scripts/probarNotificaciones.ts"
   },
   "keywords": [],
   "dependencies": {

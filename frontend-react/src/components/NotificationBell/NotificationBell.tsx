@@ -30,18 +30,25 @@ export function NotificationBell() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
+      console.log('🔔 Consultando notificaciones...');
+
       const response = await fetch(`${API_CONFIG.baseURL}/notificaciones`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('📬 Respuesta de notificaciones:', data);
+        
         if (data.success && Array.isArray(data.data)) {
           setNotifications(data.data);
+          console.log(`✅ ${data.data.length} notificaciones cargadas, ${data.data.filter((n: any) => !n.leida).length} no leídas`);
         }
+      } else {
+        console.error('❌ Error en respuesta:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error cargando notificaciones:', error);
+      console.error('❌ Error cargando notificaciones:', error);
     }
   };
 

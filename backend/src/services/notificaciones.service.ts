@@ -41,13 +41,17 @@ export async function notificarNuevoPedido(
   nombreCliente?: string
 ) {
   try {
+    console.log(`📢 Iniciando notificación de pedido: tipo=${tipoCliente}, nombre=${nombreCliente}`)
+    
     // Mapeo de tipo de cliente a tipo de operador
+    // Basado en los tipos reales: 'hogar', 'tienda', 'asadero', 'restaurante_estandar', 'restaurante_premium', 'mayorista'
     const mapeoTipoOperador: Record<string, string> = {
       'hogar': 'hogares', // Usuario con rol 'hogares'
       'mayorista': 'mayorista',
-      'horeca': 'ejecutivo_horecas',
-      'masivos': 'coordinador_masivos',
-      'comercial': 'director_comercial'
+      'restaurante_premium': 'ejecutivo_horecas',
+      'tienda': 'director_comercial',
+      'asadero': 'director_comercial',
+      'restaurante_estandar': 'director_comercial'
     }
 
     // Determinar el tipo de operador según el tipo de cliente
@@ -55,8 +59,11 @@ export async function notificarNuevoPedido(
 
     if (!tipoOperadorRequerido) {
       console.warn(`⚠️ Tipo de cliente no mapeado: ${tipoCliente}`)
-      tipoOperadorRequerido = 'mayorista' // Valor por defecto
+      // Intentar con el valor tal cual (por si viene 'coordinador_masivos' directamente)
+      tipoOperadorRequerido = tipoCliente.toLowerCase()
     }
+
+    console.log(`🔍 Buscando operadores con tipo: ${tipoOperadorRequerido}`)
 
     let usuarios: any[] = []
 
@@ -66,6 +73,7 @@ export async function notificarNuevoPedido(
         rol: 'hogares', 
         activo: true 
       }).lean()
+      console.log(`👥 Encontrados ${usuarios.length} usuarios con rol 'hogares'`)
     } else {
       // Buscar operadores del tipo correspondiente que estén activos
       usuarios = await Usuario.find({ 
@@ -73,6 +81,7 @@ export async function notificarNuevoPedido(
         tipoOperador: tipoOperadorRequerido,
         activo: true 
       }).lean()
+      console.log(`👥 Encontrados ${usuarios.length} operadores tipo '${tipoOperadorRequerido}'`)
     }
 
     if (usuarios.length === 0) {
@@ -111,11 +120,15 @@ export async function notificarNuevoPedido(
  */
 export async function notificarUsuarioDesactivado(usuarioAfectadoEmail: string, usuarioAfectadoNombre?: string) {
   try {
+    console.log(`📢 Notificando desactivación de usuario: ${usuarioAfectadoEmail}`)
+    
     // Buscar todos los administradores activos
     const administradores = await Usuario.find({ 
       rol: 'administrador', 
       activo: true 
     }).lean()
+
+    console.log(`👥 Encontrados ${administradores.length} administradores activos`)
 
     if (administradores.length === 0) {
       console.warn('⚠️ No se encontraron administradores activos')
@@ -152,11 +165,15 @@ export async function notificarUsuarioDesactivado(usuarioAfectadoEmail: string, 
  */
 export async function notificarUsuarioEliminado(usuarioAfectadoEmail: string, usuarioAfectadoNombre?: string) {
   try {
+    console.log(`📢 Notificando eliminación de usuario: ${usuarioAfectadoEmail}`)
+    
     // Buscar todos los administradores activos
     const administradores = await Usuario.find({ 
       rol: 'administrador', 
       activo: true 
     }).lean()
+
+    console.log(`👥 Encontrados ${administradores.length} administradores activos`)
 
     if (administradores.length === 0) {
       console.warn('⚠️ No se encontraron administradores activos')
