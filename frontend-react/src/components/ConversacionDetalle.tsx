@@ -172,11 +172,11 @@ export function ConversacionDetalle({ telefono, onClose }: ConversacionDetallePr
                           <div className="pedido-header-info">
                             <strong>{pedido.idPedido}</strong>
                             <span
-                              className="badge-small"
-                              style={{ background: estadoInfo.color, color: 'white' }}
-                            >
-                              {estadoInfo.icon} {estadoInfo.label}
-                            </span>
+                            className="badge-small"
+                            style={{ background: estadoInfo.color, color: 'white' }}
+                          >
+                            {estadoInfo.iconSvg} {estadoInfo.label}
+                          </span>
                           </div>
                           <div className="pedido-header-right">
                             <div className="pedido-total">

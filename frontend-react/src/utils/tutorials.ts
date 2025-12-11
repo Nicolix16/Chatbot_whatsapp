@@ -22,7 +22,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       popover: {
         title: '🎉 ¡Bienvenido al Dashboard de Avellano!',
         description: 'Este es tu panel de control donde podrás gestionar clientes, pedidos y conversaciones. Te guiaré por todas las funcionalidades.',
-        position: 'bottom'
+
       }
     },
     {
@@ -30,7 +30,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       popover: {
         title: '👥 Gestión de Clientes',
         description: 'Aquí podrás ver, crear y editar la información de todos tus clientes. Incluye datos de contacto, tipo de cliente y responsable asignado.',
-        position: 'right'
+
       }
     },
     {
@@ -38,7 +38,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       popover: {
         title: '📦 Gestión de Pedidos',
         description: 'Administra todos los pedidos: pendientes, en proceso, atendidos y cancelados. Puedes ver detalles, cambiar estados y exportar datos.',
-        position: 'right'
+
       }
     },
     {
@@ -46,7 +46,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       popover: {
         title: '💬 Historial de Conversaciones',
         description: 'Revisa todas las conversaciones de WhatsApp con tus clientes. Útil para seguimiento y análisis de interacciones.',
-        position: 'right'
+
       }
     },
     {
@@ -54,7 +54,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       popover: {
         title: '📅 Calendario de Eventos',
         description: 'Gestiona eventos y actividades programadas. Ideal para organizar entregas y reuniones.',
-        position: 'right'
+
       }
     }
   ];
@@ -66,7 +66,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       popover: {
         title: '⚙️ Gestión de Usuarios',
         description: 'Administra los usuarios del sistema: crea cuentas, asigna roles y controla permisos. Solo disponible para administradores y soporte.',
-        position: 'right'
+
       }
     });
   }
@@ -105,7 +105,7 @@ export const startClientesTutorial = () => {
         popover: {
           title: '👥 Gestión de Clientes',
           description: 'En esta sección administras toda la información de tus clientes.',
-          position: 'bottom'
+
         }
       },
       {
@@ -113,7 +113,7 @@ export const startClientesTutorial = () => {
         popover: {
           title: '➕ Agregar Cliente',
           description: 'Haz clic aquí para crear un nuevo cliente. Podrás ingresar nombre, teléfono, dirección, tipo de cliente y asignar un responsable.',
-          position: 'bottom'
+
         }
       },
       {
@@ -121,7 +121,7 @@ export const startClientesTutorial = () => {
         popover: {
           title: '🔍 Buscar Clientes',
           description: 'Usa este campo para buscar clientes por nombre o teléfono rápidamente.',
-          position: 'bottom'
+
         }
       },
       {
@@ -129,7 +129,7 @@ export const startClientesTutorial = () => {
         popover: {
           title: '📊 Estadísticas',
           description: 'Visualiza el total de clientes y su distribución por tipo (Hogar, Tienda, Restaurante, etc.).',
-          position: 'bottom'
+
         }
       },
       {
@@ -137,7 +137,7 @@ export const startClientesTutorial = () => {
         popover: {
           title: '📋 Tabla de Clientes',
           description: 'Lista completa de clientes con información detallada. Puedes editar o eliminar desde los botones de acción.',
-          position: 'top'
+
         }
       },
       {
@@ -162,7 +162,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '📦 Gestión de Pedidos',
           description: 'Administra todos los pedidos de tus clientes desde esta sección.',
-          position: 'bottom'
+
         }
       },
       {
@@ -170,7 +170,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '➕ Crear Pedido',
           description: 'Crea un nuevo pedido seleccionando cliente, productos, cantidades y fecha de entrega.',
-          position: 'bottom'
+
         }
       },
       {
@@ -178,7 +178,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '🔍 Buscar Pedidos',
           description: 'Busca pedidos por ID, cliente o productos.',
-          position: 'bottom'
+
         }
       },
       {
@@ -186,7 +186,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '🎯 Filtros',
           description: 'Filtra pedidos por estado (Pendiente, En Proceso, Atendido, Cancelado) o por rango de fechas.',
-          position: 'bottom'
+
         }
       },
       {
@@ -194,7 +194,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '📊 Resumen de Pedidos',
           description: 'Visualiza el total de pedidos y su distribución por estado.',
-          position: 'bottom'
+
         }
       },
       {
@@ -202,7 +202,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '📋 Lista de Pedidos',
           description: 'Todos los pedidos con ID, cliente, productos, total y estado. Puedes cambiar el estado con el selector de cada fila.',
-          position: 'top'
+
         }
       },
       {
@@ -210,7 +210,7 @@ export const startPedidosTutorial = () => {
         popover: {
           title: '📤 Exportar Datos',
           description: 'Exporta los pedidos a Excel para análisis externos o reportes.',
-          position: 'left'
+
         }
       },
       {
@@ -235,7 +235,7 @@ export const startConversacionesTutorial = () => {
         popover: {
           title: '💬 Historial de Conversaciones',
           description: 'Revisa todas las interacciones de WhatsApp con tus clientes.',
-          position: 'bottom'
+
         }
       },
       {
@@ -243,7 +243,7 @@ export const startConversacionesTutorial = () => {
         popover: {
           title: '🔍 Buscar Conversaciones',
           description: 'Busca conversaciones por teléfono del cliente.',
-          position: 'bottom'
+
         }
       },
       {
@@ -251,7 +251,7 @@ export const startConversacionesTutorial = () => {
         popover: {
           title: '🎯 Filtrar por Fechas',
           description: 'Filtra las conversaciones por rango de fechas para encontrar interacciones específicas.',
-          position: 'bottom'
+
         }
       },
       {
@@ -259,7 +259,7 @@ export const startConversacionesTutorial = () => {
         popover: {
           title: '📊 Estadísticas',
           description: 'Visualiza el total de conversaciones registradas.',
-          position: 'bottom'
+
         }
       },
       {
@@ -267,7 +267,7 @@ export const startConversacionesTutorial = () => {
         popover: {
           title: '📋 Historial',
           description: 'Lista de conversaciones con teléfono del cliente, número de mensajes y fecha. Haz clic en "Ver Detalles" para ver los mensajes completos.',
-          position: 'top'
+
         }
       },
       {
@@ -292,7 +292,7 @@ export const startEventosTutorial = () => {
         popover: {
           title: '📅 Gestión de Eventos',
           description: 'Organiza y programa eventos, entregas y actividades.',
-          position: 'bottom'
+
         }
       },
       {
@@ -300,7 +300,7 @@ export const startEventosTutorial = () => {
         popover: {
           title: '➕ Crear Evento',
           description: 'Programa un nuevo evento con título, descripción, fecha y hora.',
-          position: 'bottom'
+
         }
       },
       {
@@ -308,7 +308,7 @@ export const startEventosTutorial = () => {
         popover: {
           title: '🔍 Buscar Eventos',
           description: 'Busca eventos por título o descripción.',
-          position: 'bottom'
+
         }
       },
       {
@@ -316,7 +316,7 @@ export const startEventosTutorial = () => {
         popover: {
           title: '📊 Resumen',
           description: 'Visualiza el total de eventos programados.',
-          position: 'bottom'
+
         }
       },
       {
@@ -324,7 +324,7 @@ export const startEventosTutorial = () => {
         popover: {
           title: '📋 Calendario de Eventos',
           description: 'Lista de todos los eventos con fecha, hora y descripción. Puedes editar o eliminar eventos.',
-          position: 'top'
+
         }
       },
       {
@@ -349,7 +349,7 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: '⚙️ Gestión de Usuarios',
           description: 'Administra los usuarios del sistema, sus roles y permisos.',
-          position: 'bottom'
+
         }
       },
       {
@@ -357,7 +357,7 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: '➕ Agregar Usuario',
           description: 'Crea usuarios individuales o importa varios desde un archivo CSV. Puedes asignar diferentes roles.',
-          position: 'bottom'
+
         }
       },
       {
@@ -365,7 +365,7 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: '🔍 Buscar Usuarios',
           description: 'Busca usuarios por nombre o email.',
-          position: 'bottom'
+
         }
       },
       {
@@ -373,7 +373,7 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: '📊 Estadísticas',
           description: 'Visualiza el total de usuarios, activos y administradores.',
-          position: 'bottom'
+
         }
       },
       {
@@ -381,7 +381,7 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: '📋 Lista de Usuarios',
           description: 'Todos los usuarios con su rol y estado. Puedes cambiar roles, activar/desactivar usuarios o eliminarlos.',
-          position: 'top'
+
         }
       },
       {
@@ -389,7 +389,7 @@ export const startUsuariosTutorial = () => {
         popover: {
           title: '👤 Cambiar Roles',
           description: 'Cambia el rol de un usuario seleccionando entre: Administrador, Soporte, Mayorista, Director Comercial, etc.',
-          position: 'left'
+
         }
       },
       {
