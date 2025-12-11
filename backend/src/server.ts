@@ -1099,7 +1099,7 @@ app.get('/api/pedidos/:id', verificarToken, async (req: AuthRequest, res) => {
 })
 
 // 📱 Enviar mensaje de WhatsApp
-app.post('/api/whatsapp/enviar-mensaje', verificarToken, permisoEscritura, async (req: AuthRequest, res) => {
+app.post('/api/whatsapp/enviar-mensaje', verificarToken, async (req: AuthRequest, res) => {
   try {
     const { telefono, mensaje } = req.body
     
@@ -1151,7 +1151,7 @@ app.post('/api/whatsapp/enviar-mensaje', verificarToken, permisoEscritura, async
 })
 
 // 🔄 Actualizar estado de un pedido
-app.patch('/api/pedidos/:id/estado', verificarToken, permisoEscritura, async (req: AuthRequest, res) => {
+app.patch('/api/pedidos/:id/estado', verificarToken, async (req: AuthRequest, res) => {
   try {
     const { estado, notasCancelacion } = req.body
     

@@ -119,4 +119,65 @@ router.get('/:id', verificarToken, async (req: AuthRequest, res: Response) => {
   }
 })
 
+// Actualizar estado de un pedido
+router.patch('/:id/estado', verificarToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { estado, notasCancelacion } = req.body
+    
+    if (!estado || !['pendiente', 'en_proceso', 'atendido', 'cancelado'].includes(estado)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Estado inválido. Debe ser: pendiente, en_proceso, atendido o cancelado' 
+      })
+    }
+    
+    const pedido = await Pedido.findById(req.params.id)
+    
+    if (!pedido) {
+      return res.status(404).json({ success: false, error: 'Pedido no encontrado' })
+    }
+    
+    // Verificar permisos
+    if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
+      const cliente = await Cliente.findOne({ telefono: pedido.telefono }).lean()
+      
+      if (!cliente || cliente.responsable !== req.user!.tipoOperador) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'No tienes permiso para modificar este pedido' 
+        })
+      }
+    } else if (req.user!.rol === 'hogares') {
+      const cliente = await Cliente.findOne({ telefono: pedido.telefono }).lean()
+      
+      if (!cliente || cliente.tipoCliente !== 'hogar') {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'No tienes permiso para modificar este pedido' 
+        })
+      }
+    } else if (req.user!.rol !== 'administrador' && req.user!.rol !== 'soporte') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'No tienes permisos para modificar pedidos' 
+      })
+    }
+    
+    // Actualizar estado
+    pedido.estado = estado
+    if (notasCancelacion) {
+      pedido.notasCancelacion = notasCancelacion
+    }
+    
+    await pedido.save()
+    
+    console.log(`✅ Pedido ${pedido.idPedido} actualizado a estado: ${estado} por usuario: ${req.user!.nombre}`)
+    
+    res.json({ success: true, data: pedido })
+  } catch (error) {
+    console.error('❌ Error actualizando estado del pedido:', error)
+    res.status(500).json({ success: false, error: 'Error actualizando estado del pedido' })
+  }
+})
+
 export default router

@@ -263,9 +263,8 @@ export const hacerPedidoFlow = addKeyword<Provider, Database>([
   
   // Si NO es hogar, redirigir a verCatalogoFlow de negocios
   if (tipoCliente !== 'hogar') {
-    console.log(`[hacerPedidoFlow] Cliente es ${tipoCliente}, redirigiendo a verCatalogoFlow`)
-    const { verCatalogoFlow } = await import('./negocios.flow.js')
-    const { gotoFlow } = await import('@builderbot/bot')
+    console.log(`[hacerPedidoFlow] Cliente es ${tipoCliente}, mostrando catálogo de negocios`)
+    
     // Usar el flujo de negocios
     await state.update({ 
       tipoNegocio: tipoCliente,
