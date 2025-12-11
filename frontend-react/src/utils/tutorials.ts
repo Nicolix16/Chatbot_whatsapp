@@ -5,18 +5,11 @@ import type { UserRole } from '../types';
 // Configuración base de Driver.js
 const driverConfig = {
   showProgress: true,
-  showButtons: ['next', 'previous', 'close'],
   nextBtnText: 'Siguiente →',
   prevBtnText: '← Anterior',
   doneBtnText: '✓ Finalizar',
   progressText: '{{current}} de {{total}}',
-  popoverClass: 'driver-popover-custom',
-  onDestroyStarted: () => {
-    if (!confirm('¿Estás seguro de salir del tutorial?')) {
-      return;
-    }
-    driverObj.destroy();
-  }
+  popoverClass: 'driver-popover-custom'
 };
 
 let driverObj: any;
@@ -83,8 +76,7 @@ export const startCompleteTutorial = (userRole: UserRole) => {
       element: '.user-profile',
       popover: {
         title: '👤 Tu Perfil',
-        description: `Conectado como ${userRole}. Aquí puedes ver tu información de usuario.`,
-        position: 'left'
+        description: `Conectado como ${userRole}. Aquí puedes ver tu información de usuario.`
       }
     },
     {
