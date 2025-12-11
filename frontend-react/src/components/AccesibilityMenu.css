@@ -1,0 +1,359 @@
+/* Botón flotante de accesibilidad */
+.accesibility-trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.accesibility-trigger:hover {
+  background: #1d4ed8;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+}
+
+.accesibility-trigger svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Overlay */
+.accesibility-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Panel de accesibilidad */
+.accesibility-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  animation: slideUp 0.3s ease;
+}
+
+.accesibility-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.accesibility-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.accesibility-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #6b7280;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.accesibility-header .close-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.accesibility-content {
+  padding: 20px 24px;
+}
+
+.accesibility-section {
+  margin-bottom: 24px;
+}
+
+.accesibility-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+/* Grupo de botones de tamaño */
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.size-btn, .spacing-btn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.size-btn:hover, .spacing-btn:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.size-btn.active, .spacing-btn.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: white;
+}
+
+/* Toggle items */
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.toggle-item:last-child {
+  border-bottom: none;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.toggle-label svg {
+  color: #6b7280;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: 0.3s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #2563eb;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
+
+/* Botón de resetear */
+.reset-btn {
+  width: 100%;
+  padding: 12px 20px;
+  border: 2px solid #ef4444;
+  background: white;
+  color: #ef4444;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.reset-btn:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Estilos aplicados al DOM según configuración */
+
+/* Tamaños de texto */
+html[data-font-size="small"] {
+  font-size: 14px;
+}
+
+html[data-font-size="medium"] {
+  font-size: 16px;
+}
+
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+
+html[data-font-size="xlarge"] {
+  font-size: 20px;
+}
+
+/* Espaciado de líneas */
+html[data-line-spacing="wide"] body {
+  line-height: 1.8;
+}
+
+html[data-line-spacing="wide"] p,
+html[data-line-spacing="wide"] li,
+html[data-line-spacing="wide"] td {
+  line-height: 1.9;
+}
+
+/* Alto contraste */
+html.high-contrast {
+  filter: contrast(1.3);
+}
+
+html.high-contrast body {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+html.high-contrast .modal-content,
+html.high-contrast .data-table,
+html.high-contrast .stat-card,
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea {
+  background: #1a1a1a !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+/* Subrayar enlaces */
+html.underline-links a {
+  text-decoration: underline !important;
+}
+
+html.underline-links button {
+  text-decoration: underline;
+}
+
+/* Escala de grises */
+html.grayscale {
+  filter: grayscale(100%);
+}
+
+/* Fuente legible */
+html.legible-font,
+html.legible-font * {
+  font-family: 'Arial', 'Helvetica', sans-serif !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .accesibility-panel {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .accesibility-trigger {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .accesibility-trigger svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .button-group {
+    gap: 6px;
+  }
+
+  .size-btn, .spacing-btn {
+    padding: 10px;
+  }
+}
