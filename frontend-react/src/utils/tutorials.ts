@@ -100,31 +100,24 @@ export const startClientesTutorial = () => {
         }
       },
       {
-        element: '.search-input',
-        popover: {
-          title: 'Buscar Clientes',
-          description: 'Usa este campo para buscar clientes por nombre, teléfono o negocio. La búsqueda filtra en tiempo real.'
-        }
-      },
-      {
         element: '.stats-row',
         popover: {
           title: 'Estadísticas de Clientes',
-          description: 'Visualiza el total de clientes registrados y estadísticas generales. Haz clic en las tarjetas para filtrar.'
+          description: 'Visualiza el total de clientes, clientes hogar, negocios y registrados hoy. Haz clic en las tarjetas para filtrar.'
+        }
+      },
+      {
+        element: '.search-input',
+        popover: {
+          title: 'Buscar Clientes',
+          description: 'Usa este campo para buscar clientes por nombre, teléfono, negocio o ciudad. La búsqueda filtra en tiempo real.'
         }
       },
       {
         element: '.data-table',
         popover: {
           title: 'Lista de Clientes',
-          description: 'Tabla completa con información de cada cliente: nombre, teléfono, tipo, dirección y responsable. Haz clic en una fila para ver más detalles.'
-        }
-      },
-      {
-        element: '.export-btn',
-        popover: {
-          title: 'Exportar a Excel',
-          description: 'Exporta la lista de clientes a Excel para análisis externos o respaldos.'
+          description: 'Tabla completa con información de cada cliente. Haz clic en una fila para ver más detalles.'
         }
       }
     ]
@@ -146,6 +139,13 @@ export const startPedidosTutorial = () => {
         }
       },
       {
+        element: '.stats-row',
+        popover: {
+          title: 'Filtrar por Estado',
+          description: 'Haz clic en cada tarjeta para filtrar pedidos: Total, Pendientes, En Proceso, Atendidos o Cancelados.'
+        }
+      },
+      {
         element: '.search-input',
         popover: {
           title: 'Buscar Pedidos',
@@ -153,24 +153,10 @@ export const startPedidosTutorial = () => {
         }
       },
       {
-        element: '.stats-row',
-        popover: {
-          title: 'Filtrar por Estado',
-          description: 'Haz clic en cada tarjeta para filtrar pedidos: Total, Pendientes, En Proceso, Atendidos o Cancelados. Las tarjetas también muestran estadísticas actualizadas.'
-        }
-      },
-      {
         element: '.data-table',
         popover: {
           title: 'Lista de Pedidos',
-          description: 'Todos los pedidos con ID, cliente, productos, total y estado. Haz clic en una fila para ver detalles completos y cambiar el estado del pedido.'
-        }
-      },
-      {
-        element: '.export-btn',
-        popover: {
-          title: 'Exportar Pedidos',
-          description: 'Exporta los pedidos filtrados a Excel para análisis externos o reportes.'
+          description: 'Todos los pedidos con ID, cliente, productos, total y estado. Haz clic en una fila para ver detalles completos.'
         }
       }
     ]
@@ -192,13 +178,6 @@ export const startConversacionesTutorial = () => {
         }
       },
       {
-        element: '.search-input',
-        popover: {
-          title: 'Buscar Conversaciones',
-          description: 'Busca conversaciones por número de teléfono del cliente. La búsqueda filtra en tiempo real.'
-        }
-      },
-      {
         element: '.stats-row',
         popover: {
           title: 'Estadísticas',
@@ -206,17 +185,17 @@ export const startConversacionesTutorial = () => {
         }
       },
       {
+        element: '.search-input',
+        popover: {
+          title: 'Buscar Conversaciones',
+          description: 'Busca conversaciones por número de teléfono del cliente. La búsqueda filtra en tiempo real.'
+        }
+      },
+      {
         element: '.data-table',
         popover: {
           title: 'Historial',
           description: 'Lista de conversaciones con teléfono del cliente, cantidad de mensajes y fecha. Haz clic en "Ver Detalles" para leer los mensajes completos.'
-        }
-      },
-      {
-        element: '.export-btn',
-        popover: {
-          title: 'Exportar Conversaciones',
-          description: 'Exporta el historial de conversaciones a Excel para análisis o respaldos.'
         }
       }
     ]
@@ -238,38 +217,24 @@ export const startEventosTutorial = () => {
         }
       },
       {
-        element: '.btn-create',
+        element: '.page-header .btn-create',
         popover: {
           title: 'Crear Evento',
           description: 'Haz clic aquí para crear un nuevo evento. Podrás seleccionar destinatarios, escribir el mensaje, programar fecha y hora de envío.'
         }
       },
       {
-        element: '.search-input',
-        popover: {
-          title: 'Buscar Eventos',
-          description: 'Busca eventos por nombre o descripción. La búsqueda filtra en tiempo real.'
-        }
-      },
-      {
         element: '.stats-row',
         popover: {
           title: 'Estadísticas de Eventos',
-          description: 'Visualiza el total de eventos programados y estadísticas generales.'
+          description: 'Visualiza el total de eventos programados, completados y mensajes enviados.'
         }
       },
       {
-        element: '.data-table',
+        element: '.eventos-grid',
         popover: {
           title: 'Lista de Eventos',
-          description: 'Todos los eventos programados con nombre, fecha, hora, destinatarios y estado. Puedes ver detalles, editar o eliminar eventos.'
-        }
-      },
-      {
-        element: '.export-btn',
-        popover: {
-          title: 'Exportar Eventos',
-          description: 'Exporta la lista de eventos a Excel para análisis o respaldos.'
+          description: 'Todos los eventos programados con nombre, mensaje, destinatarios y estado. Puedes ver detalles de cada evento.'
         }
       }
     ]
@@ -291,10 +256,17 @@ export const startUsuariosTutorial = () => {
         }
       },
       {
-        element: '.btn-create',
+        element: '.page-header .btn-create',
         popover: {
           title: 'Agregar Usuario',
           description: 'Crea nuevos usuarios asignando nombre, email, contraseña y rol. Puedes crear administradores, soporte u operadores.'
+        }
+      },
+      {
+        element: '.stats-row',
+        popover: {
+          title: 'Estadísticas de Usuarios',
+          description: 'Visualiza el total de usuarios registrados y activos en el sistema.'
         }
       },
       {
@@ -305,24 +277,10 @@ export const startUsuariosTutorial = () => {
         }
       },
       {
-        element: '.stats-row',
-        popover: {
-          title: 'Estadísticas de Usuarios',
-          description: 'Visualiza el total de usuarios registrados, activos e inactivos.'
-        }
-      },
-      {
         element: '.data-table',
         popover: {
           title: 'Lista de Usuarios',
-          description: 'Todos los usuarios con su nombre, email, rol y estado. Puedes cambiar roles, activar/desactivar o eliminar usuarios.'
-        }
-      },
-      {
-        element: '.export-btn',
-        popover: {
-          title: 'Exportar Usuarios',
-          description: 'Exporta la lista de usuarios a Excel para análisis o respaldos.'
+          description: 'Todos los usuarios con su nombre, email, rol y estado. Puedes gestionar permisos desde aquí.'
         }
       }
     ]

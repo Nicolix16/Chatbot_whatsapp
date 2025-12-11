@@ -191,12 +191,14 @@ En breve me pondré en contacto contigo para confirmar los detalles y coordinar 
             <h2 className="pedido-id">{pedido.idPedido}</h2>
             <span className={`badge badge-${pedido.estado} badge-large`}>
               {estadoInfo.iconSvg} {estadoInfo.label.toUpperCase()}
-            </span>
-          </div>
-          <button className="modal-close-btn" onClick={onClose}>✕</button>
+          </span>
         </div>
-
-        <div className="modal-body-pedido">
+        <button className="modal-close-btn" onClick={onClose}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </div>        <div className="modal-body-pedido">
         <div className="pedido-fecha">
         <svg className="date-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>

@@ -17,20 +17,3 @@
   padding: 30px;
   background: #F8F9FA;
 }
-
-/* Responsive para móvil */
-@media (max-width: 768px) {
-  .dashboard-wrapper {
-    flex-direction: column;
-  }
-  
-  .content-area {
-    padding: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .content-area {
-    padding: 10px;
-  }
-}

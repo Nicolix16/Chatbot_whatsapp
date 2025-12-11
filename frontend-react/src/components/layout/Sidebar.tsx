@@ -26,7 +26,6 @@ export function Sidebar() {
         <div className="sidebar-logo">
           <img src="/assets/images/LOGO_AVELLANO.png" alt="Logo Avellano" />
         </div>
-        <h2 className="sidebar-title">Avellano</h2>
       </div>
 
       <div className="user-card">

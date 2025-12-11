@@ -80,29 +80,28 @@
 }
 
 .modal-close-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
   border: none;
   color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
   flex-shrink: 0;
-}
-
-.modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: rotate(90deg);
+  padding: 0;
 }
 
 .modal-close-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
+}
+
+.modal-close-btn:hover {
+  transform: rotate(90deg) scale(1.2);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
 }
 
 /* Body del Modal */

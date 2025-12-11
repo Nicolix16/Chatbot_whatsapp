@@ -99,7 +99,11 @@ export function ConversacionDetalle({ telefono, onClose }: ConversacionDetallePr
         {/* Header */}
         <div className="modal-header-conversacion">
           <h2>Conversación con {nombreDisplay}</h2>
-          <button className="modal-close-btn" onClick={onClose}>✕</button>
+          <button className="modal-close-btn" onClick={onClose}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
 
         <div className="modal-body-conversacion">

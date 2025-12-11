@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   startCompleteTutorial,
   startClientesTutorial,
@@ -16,6 +16,7 @@ export function HelpButton() {
   const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -32,6 +33,31 @@ export function HelpButton() {
   const handleTutorial = (tutorialType: string) => {
     setShowMenu(false);
     
+    // Determinar página actual
+    const currentPage = location.pathname.split('/').pop();
+    
+    // Mapeo de tutoriales a páginas
+    const tutorialPages: Record<string, string> = {
+      'clientes': 'clientes',
+      'pedidos': 'pedidos',
+      'conversaciones': 'conversaciones',
+      'eventos': 'eventos',
+      'usuarios': 'usuarios'
+    };
+    
+    // Si el tutorial no es 'complete' y no estamos en la página correcta, redirigir
+    if (tutorialType !== 'complete' && tutorialPages[tutorialType] && currentPage !== tutorialPages[tutorialType]) {
+      navigate(`/dashboard/${tutorialPages[tutorialType]}`);
+      // Esperar a que se cargue la página antes de iniciar tutorial
+      setTimeout(() => {
+        startTutorial(tutorialType);
+      }, 500);
+    } else {
+      startTutorial(tutorialType);
+    }
+  };
+
+  const startTutorial = (tutorialType: string) => {
     switch (tutorialType) {
       case 'complete':
         startCompleteTutorial(user?.rol || 'operador');

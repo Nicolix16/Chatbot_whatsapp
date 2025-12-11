@@ -30,7 +30,7 @@ export function Header() {
         </svg>
         <div className="header-title-section">
           <h1 className="page-title">Panel de Control</h1>
-          <p className="page-subtitle-header">Gestión Avellano</p>
+          <p className="page-subtitle-header">Sistema de Gestión</p>
         </div>
       </div>
       <div className="header-right">
