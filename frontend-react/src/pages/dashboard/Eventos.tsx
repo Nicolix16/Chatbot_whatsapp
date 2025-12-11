@@ -9,6 +9,8 @@ export function Eventos() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   // const [vistaActual, setVistaActual] = useState<'eventos' | 'logs'>('eventos');
 
   useEffect(() => {
@@ -47,6 +49,13 @@ export function Eventos() {
     }
   };
 
+  // Filtrar eventos por búsqueda
+  const eventosFiltrados = eventos.filter(evento =>
+    evento.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    evento.mensaje.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    evento.creadoPor.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (isLoading) return <div className="loading">Cargando eventos...</div>;
 
   return (
@@ -83,8 +92,145 @@ export function Eventos() {
         </div>
       </div>
 
+      {/* Barra de búsqueda */}
+      <div className="search-wrapper">
+        <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+          <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar eventos por nombre, mensaje o creador..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+      </div>
+
+      {/* Tabla de eventos */}
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Estado</th>
+              <th>Destinatarios</th>
+              <th>Enviados</th>
+              <th>Fallidos</th>
+              <th>Creado</th>
+              <th>Enviado</th>
+              <th>Por</th>
+            </tr>
+          </thead>
+          <tbody>
+            {eventosFiltrados.length === 0 ? (
+              <tr><td colSpan={8} className="no-data">No hay eventos que coincidan con la búsqueda</td></tr>
+            ) : (
+              eventosFiltrados.map(evento => (
+                <tr key={evento._id} onClick={() => setSelectedEvento(evento)} style={{ cursor: 'pointer' }}>
+                  <td>
+                    <strong>{evento.nombre}</strong>
+                  </td>
+                  <td>
+                    <span className={`badge badge-${evento.estado}`}>
+                      {evento.estado.toUpperCase()}
+                    </span>
+                  </td>
+                  <td>{evento.destinatarios.total}</td>
+                  <td className="text-success">{evento.destinatarios.enviados}</td>
+                  <td className={evento.destinatarios.fallidos > 0 ? 'text-error' : ''}>
+                    {evento.destinatarios.fallidos}
+                  </td>
+                  <td>{formatearFecha(evento.fechaCreacion)}</td>
+                  <td>{evento.fechaEnvio ? formatearFecha(evento.fechaEnvio) : '-'}</td>
+                  <td>{evento.creadoPor}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal de detalles del evento */}
+      {selectedEvento && (
+        <div className="modal-overlay" onClick={() => setSelectedEvento(null)}>
+          <div className="modal-content evento-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Detalles del Evento</h3>
+              <button className="close-btn" onClick={() => setSelectedEvento(null)}>×</button>
+            </div>
+
+            <div className="evento-detail-content">
+              <div className="detail-section">
+                <h4>Información General</h4>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <label>Nombre:</label>
+                    <span>{selectedEvento.nombre}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Estado:</label>
+                    <span className={`badge badge-${selectedEvento.estado}`}>
+                      {selectedEvento.estado.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Creado por:</label>
+                    <span>{selectedEvento.creadoPor}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Fecha de creación:</label>
+                    <span>{formatearFecha(selectedEvento.fechaCreacion)}</span>
+                  </div>
+                  {selectedEvento.fechaEnvio && (
+                    <div className="detail-item">
+                      <label>Fecha de envío:</label>
+                      <span>{formatearFecha(selectedEvento.fechaEnvio)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <h4>Mensaje</h4>
+                <div className="mensaje-box">
+                  {selectedEvento.mensaje}
+                </div>
+              </div>
+
+              {selectedEvento.imagenUrl && (
+                <div className="detail-section">
+                  <h4>Imagen</h4>
+                  <div className="imagen-preview">
+                    <img src={selectedEvento.imagenUrl} alt="Evento" />
+                  </div>
+                </div>
+              )}
+
+              <div className="detail-section">
+                <h4>Estadísticas</h4>
+                <div className="stats-grid">
+                  <div className="stat-box">
+                    <div className="stat-box-value">{selectedEvento.destinatarios.total}</div>
+                    <div className="stat-box-label">Total Destinatarios</div>
+                  </div>
+                  <div className="stat-box success">
+                    <div className="stat-box-value">{selectedEvento.destinatarios.enviados}</div>
+                    <div className="stat-box-label">Enviados</div>
+                  </div>
+                  <div className="stat-box error">
+                    <div className="stat-box-value">{selectedEvento.destinatarios.fallidos}</div>
+                    <div className="stat-box-label">Fallidos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Contenido */}
-      <div className="eventos-masivos-container">
+      <div className="eventos-masivos-container" style={{ display: 'none' }}>
         {eventos.length === 0 ? (
           <div className="empty-state">
             <svg className="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
