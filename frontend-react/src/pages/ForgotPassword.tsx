@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '../config/api';
+import { MdLock, MdMail, MdShield, MdChat } from 'react-icons/md';
 import './ForgotPassword.css';
 
 export function ForgotPassword() {
@@ -56,81 +57,73 @@ export function ForgotPassword() {
 
   return (
     <div className="forgot-password-container">
-      <div className="forgot-password-left">
-        <div className="brand-section">
-          <img src="/logo.png" alt="Avellano" className="brand-logo" />
-          <h1 className="brand-name">Avellano</h1>
+      {/* Panel izquierdo */}
+      <div className="forgot-password-sidebar">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+          <div className="sidebar-logo">
+            <img 
+              src="/assets/images/LOGO_AVELLANO.png" 
+              alt="Logo Avellano"
+            />
+          </div>
         </div>
-        
-        <div className="info-cards">
-          <div className="info-card">
-            <div className="info-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
-                <path d="M12 15V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+
+        <div className="sidebar-menu">
+          <div className="menu-item">
+            <div className="menu-item-icon"><MdLock /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Seguridad</div>
+              <div className="menu-item-subtitle">Tu información está protegida</div>
             </div>
-            <h3>Seguridad</h3>
-            <p>Tu información está protegida</p>
           </div>
-          <div className="info-card">
-            <div className="info-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
-                <path d="M3 9L12 14L21 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+
+          <div className="menu-item">
+            <div className="menu-item-icon"><MdMail /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Rápido</div>
+              <div className="menu-item-subtitle">Recupera tu acceso en minutos</div>
             </div>
-            <h3>Rápido</h3>
-            <p>Recupera tu acceso en minutos</p>
           </div>
-          <div className="info-card">
-            <div className="info-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+
+          <div className="menu-item">
+            <div className="menu-item-icon"><MdShield /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Confiable</div>
+              <div className="menu-item-subtitle">Proceso seguro y encriptado</div>
             </div>
-            <h3>Confiable</h3>
-            <p>Proceso seguro y encriptado</p>
           </div>
-          <div className="info-card">
-            <div className="info-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+
+          <div className="menu-item">
+            <div className="menu-item-icon"><MdChat /></div>
+            <div className="menu-item-content">
+              <div className="menu-item-title">Comunicaciones</div>
+              <div className="menu-item-subtitle">Gestión de WhatsApp</div>
             </div>
-            <h3>Comunicaciones</h3>
-            <p>Gestión de WhatsApp</p>
           </div>
         </div>
       </div>
 
-      <div className="forgot-password-right">
-        <div className="forgot-password-card">
-          <div className="avellano-header">
-            <img src="/logo.png" alt="Avellano" className="header-logo" />
-            <h2>Avellano</h2>
+      {/* Panel derecho con formulario */}
+      <div className="forgot-password-form-panel">
+        <div className="forgot-password-form-container">
+          <div className="forgot-password-header">
+            <h1>Recuperación de Contraseña</h1>
+            <p>Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña</p>
           </div>
 
-          <h1 className="forgot-title">Recuperación de Contraseña</h1>
-          <p className="forgot-subtitle">
-            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña
-          </p>
+          <form onSubmit={handleSubmit} className="forgot-password-form">
+            {message && (
+              <div className="success-message">
+                {message}
+              </div>
+            )}
 
-          {message && (
-            <div className="success-message">
-              {message}
-            </div>
-          )}
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
 
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="forgot-form">
             <div className="form-group">
               <label htmlFor="email">CORREO ELECTRÓNICO</label>
               <input
@@ -146,20 +139,16 @@ export function ForgotPassword() {
 
             <button 
               type="submit" 
-              className="submit-btn"
+              className="forgot-password-button"
               disabled={isLoading}
             >
               {isLoading ? 'ENVIANDO...' : 'ENVIAR ENLACE DE RECUPERACIÓN'}
             </button>
 
-            <div className="back-to-login">
-              <button
-                type="button"
-                onClick={() => navigate('/login')}
-                className="back-link"
-              >
+            <div className="forgot-password-link">
+              <a onClick={() => navigate('/login')}>
                 ← Volver a iniciar Sesión
-              </button>
+              </a>
             </div>
           </form>
 
