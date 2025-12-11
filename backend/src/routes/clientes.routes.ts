@@ -1,6 +1,6 @@
 import { Router, Response } from 'express'
 import Cliente from '../models/Cliente.js'
-import { verificarToken, adminOOperador, AuthRequest } from '../middleware/auth.js'
+import { verificarToken, adminOOperador, adminOSoporte, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -11,26 +11,24 @@ router.get('/', verificarToken, async (req: AuthRequest, res: Response) => {
     
     console.log('🔍 [CLIENTES] Usuario:', req.user?.email, 'Rol:', req.user?.rol, 'TipoOperador:', req.user?.tipoOperador)
     
-    // Soporte no debería ver clientes
-    if (req.user!.rol === 'soporte') {
-      return res.json({ success: true, total: 0, data: [] })
+    // Admin y soporte ven todos los clientes (sin filtro)
+    if (req.user!.rol === 'administrador' || req.user!.rol === 'soporte') {
+      filtro = {}
+      console.log('👑 [CLIENTES] Admin/Soporte - sin filtros, ve todos')
     }
-    
     // Rol hogares solo ve clientes tipo 'hogar'
-    if (req.user!.rol === 'hogares') {
+    else if (req.user!.rol === 'hogares') {
       filtro = { tipoCliente: 'hogar' }
       console.log('🏠 [CLIENTES] Aplicando filtro hogares:', filtro)
     }
-    
     // Si es operador, filtrar por su tipo de responsabilidad
-    if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
+    else if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
       filtro = { responsable: req.user!.tipoOperador }
       console.log('👔 [CLIENTES] Aplicando filtro operador:', filtro)
     }
     
     console.log('📊 [CLIENTES] Filtro final:', filtro)
     
-    // Administrador ve todos los clientes (filtro vacío)
     const clientes = await Cliente.find(filtro).sort({ fechaRegistro: -1 })
     
     console.log('✅ [CLIENTES] Clientes encontrados:', clientes.length)
@@ -49,8 +47,8 @@ router.get('/', verificarToken, async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Obtener un cliente por teléfono (solo admin y operador)
-router.get('/:telefono', verificarToken, adminOOperador, async (req: AuthRequest, res: Response) => {
+// Obtener un cliente por teléfono (admin, soporte y operadores)
+router.get('/:telefono', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
     const cliente = await Cliente.findOne({ telefono: req.params.telefono })
     if (!cliente) {

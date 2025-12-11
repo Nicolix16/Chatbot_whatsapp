@@ -60,9 +60,15 @@ router.get('/', verificarToken, async (req: AuthRequest, res: Response) => {
       }
       
       pedidos = await Pedido.find({ telefono: { $in: telefonos } }).sort({ fechaPedido: -1 }).lean()
-    } else {
-      // Administrador y soporte ven todos los pedidos
+    } else if (req.user!.rol === 'administrador' || req.user!.rol === 'soporte') {
+      // Administrador y soporte ven todos los pedidos sin filtros
       pedidos = await Pedido.find({}).sort({ fechaPedido: -1 }).lean()
+    } else {
+      // Cualquier otro rol no tiene acceso
+      return res.status(403).json({
+        success: false,
+        error: 'No tienes permisos para ver pedidos'
+      })
     }
     
     res.json({
@@ -88,11 +94,20 @@ router.get('/:id', verificarToken, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, error: 'Pedido no encontrado' })
     }
     
-    // Verificar permisos: operadores solo pueden ver pedidos de sus clientes
+    // Admin y soporte pueden ver todos los pedidos
+    // Operadores solo pueden ver pedidos de sus clientes
     if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
       const cliente = await Cliente.findOne({ telefono: pedido.telefono }).lean()
       
       if (!cliente || cliente.responsable !== req.user!.tipoOperador) {
+        return res.status(403).json({ success: false, error: 'No tienes permiso para ver este pedido' })
+      }
+    }
+    // Hogares solo pueden ver pedidos de clientes tipo hogar
+    else if (req.user!.rol === 'hogares') {
+      const cliente = await Cliente.findOne({ telefono: pedido.telefono }).lean()
+      
+      if (!cliente || cliente.tipoCliente !== 'hogar') {
         return res.status(403).json({ success: false, error: 'No tienes permiso para ver este pedido' })
       }
     }

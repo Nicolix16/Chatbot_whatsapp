@@ -1,17 +1,21 @@
 import { Router, Response } from 'express'
 import Conversacion from '../models/Conversacion.js'
 import Cliente from '../models/Cliente.js'
-import { verificarToken, adminOOperador, AuthRequest } from '../middleware/auth.js'
+import { verificarToken, adminOOperador, adminOSoporte, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 
 // Obtener todas las conversaciones (con filtros según rol)
-router.get('/', verificarToken, adminOOperador, async (req: AuthRequest, res: Response) => {
+router.get('/', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
     let filtroConversaciones: any = {}
     
+    // Admin y soporte ven todas las conversaciones sin filtro
+    if (req.user!.rol === 'administrador' || req.user!.rol === 'soporte') {
+      filtroConversaciones = {}
+    }
     // Si es operador, filtrar solo conversaciones de clientes asignados
-    if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
+    else if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
       const clientesAsignados = await Cliente.find(
         { responsable: req.user!.tipoOperador },
         { telefono: 1 }
@@ -77,7 +81,7 @@ router.get('/', verificarToken, adminOOperador, async (req: AuthRequest, res: Re
 })
 
 // Obtener detalle de una conversación específica
-router.get('/:telefono', verificarToken, adminOOperador, async (req: AuthRequest, res: Response) => {
+router.get('/:telefono', verificarToken, async (req: AuthRequest, res: Response) => {
   try {
     const conversacion = await Conversacion.findOne({ telefono: req.params.telefono })
     if (!conversacion) {

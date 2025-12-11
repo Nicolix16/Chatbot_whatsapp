@@ -1,12 +1,12 @@
 import { Router, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import Usuario from '../models/Usuario.js'
-import { verificarToken, soloAdmin, AuthRequest } from '../middleware/auth.js'
+import { verificarToken, soloAdmin, adminOSoporte, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 
-// Obtener todos los usuarios (solo admin)
-router.get('/', verificarToken, soloAdmin, async (req: AuthRequest, res: Response) => {
+// Obtener todos los usuarios (admin y soporte)
+router.get('/', verificarToken, adminOSoporte, async (req: AuthRequest, res: Response) => {
   try {
     const usuarios = await Usuario.find().select('-passwordHash -refreshToken').sort({ createdAt: -1 })
     res.json({ success: true, data: usuarios })
@@ -15,8 +15,8 @@ router.get('/', verificarToken, soloAdmin, async (req: AuthRequest, res: Respons
   }
 })
 
-// Crear nuevo usuario (solo admin)
-router.post('/', verificarToken, soloAdmin, async (req: AuthRequest, res: Response) => {
+// Crear nuevo usuario (admin y soporte)
+router.post('/', verificarToken, adminOSoporte, async (req: AuthRequest, res: Response) => {
   try {
     const { nombre, email, password, rol, tipoOperador } = req.body
     
@@ -76,8 +76,8 @@ router.post('/', verificarToken, soloAdmin, async (req: AuthRequest, res: Respon
   }
 })
 
-// Crear múltiples usuarios desde CSV (solo admin)
-router.post('/bulk', verificarToken, soloAdmin, async (req: AuthRequest, res: Response) => {
+// Crear múltiples usuarios desde CSV (admin y soporte)
+router.post('/bulk', verificarToken, adminOSoporte, async (req: AuthRequest, res: Response) => {
   try {
     const { usuarios } = req.body
     

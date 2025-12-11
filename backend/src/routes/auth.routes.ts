@@ -242,22 +242,94 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     user.resetPasswordExpires = new Date(Date.now() + 3600000)
     await user.save()
 
-    const resetUrl = `${config.frontend.url}/reset-password.html?token=${resetToken}`
+    const resetUrl = `${config.frontend.url}/reset-password?token=${resetToken}`
 
     if (config.sendgrid.apiKey) {
       const msg = {
         to: user.email,
         from: { email: config.sendgrid.fromEmail, name: 'Avellano' },
-        subject: 'Recuperación de Contraseña',
+        subject: '🔒 Recuperación de Contraseña - Avellano',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Recuperación de Contraseña</h2>
-            <p>Hola ${user.nombre},</p>
-            <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace:</p>
-            <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
-            <p>Este enlace expirará en 1 hora.</p>
-            <p>Si no solicitaste esto, ignora este correo.</p>
-          </div>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <div style="background: linear-gradient(135deg, #D1132A 0%, #F2A904 100%); padding: 40px 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);">
+                
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #D1132A 0%, #9E0F20 100%); padding: 30px; text-align: center;">
+                  <div style="background: white; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="5" y="11" width="14" height="10" rx="2" stroke="#D1132A" stroke-width="2"/>
+                      <path d="M8 11V7C8 5.93913 8.42143 4.92172 9.17157 4.17157C9.92172 3.42143 10.9391 3 12 3C13.0609 3 14.0783 3.42143 14.8284 4.17157C15.5786 4.92172 16 5.93913 16 7V11" stroke="#D1132A" stroke-width="2" stroke-linecap="round"/>
+                      <circle cx="12" cy="16" r="1" fill="#D1132A"/>
+                    </svg>
+                  </div>
+                  <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Recuperación de Contraseña</h1>
+                </div>
+                
+                <!-- Body -->
+                <div style="padding: 40px 30px;">
+                  <p style="color: #1f2937; font-size: 16px; line-height: 1.6; margin: 0 0 10px 0;">
+                    Hola <strong>${user.nombre}</strong>,
+                  </p>
+                  
+                  <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                    Recibimos una solicitud para restablecer la contraseña de tu cuenta en Avellano.
+                  </p>
+                  
+                  <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">
+                    Haz clic en el siguiente botón para crear una nueva contraseña:
+                  </p>
+                  
+                  <div style="text-align: center; margin: 35px 0;">
+                    <a href="${resetUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #D1132A 0%, #9E0F20 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(209, 19, 42, 0.4); transition: all 0.2s;">
+                      RESTABLECER CONTRASEÑA
+                    </a>
+                  </div>
+                  
+                  <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 30px 0 10px 0;">
+                    O copia y pega este enlace en tu navegador:
+                  </p>
+                  
+                  <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; word-break: break-all;">
+                    <a href="${resetUrl}" style="color: #3b82f6; font-size: 13px; text-decoration: none;">${resetUrl}</a>
+                  </div>
+                  
+                  <!-- Warning Box -->
+                  <div style="background: #fef3c7; border-left: 4px solid #F2A904; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                    <p style="margin: 0 0 8px 0; font-weight: 600; color: #92400e; font-size: 14px;">
+                      ⚠️ Importante:
+                    </p>
+                    <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 13px; line-height: 1.6;">
+                      <li>Este enlace expirará en <strong>1 hora</strong></li>
+                      <li>Si no solicitaste este cambio, ignora este correo</li>
+                      <li>Tu contraseña actual seguirá siendo válida hasta que crees una nueva</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <!-- Footer -->
+                <div style="background: #f9fafb; padding: 25px 30px; border-top: 1px solid #e5e7eb;">
+                  <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0 0 15px 0; text-align: center;">
+                    Este es un correo automático, por favor no respondas a este mensaje.
+                  </p>
+                  <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
+                    © 2025 Avellano - Alimentar es Amar
+                  </p>
+                  <p style="color: #9ca3af; font-size: 11px; margin: 8px 0 0 0; text-align: center;">
+                    Panel de Control: <a href="${config.frontend.url}" style="color: #D1132A; text-decoration: none;">${config.frontend.url}</a>
+                  </p>
+                </div>
+                
+              </div>
+            </div>
+          </body>
+          </html>
         `
       }
 

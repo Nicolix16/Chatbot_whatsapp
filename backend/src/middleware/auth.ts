@@ -60,16 +60,17 @@ export function requiereRol(...rolesPermitidos: RolUsuario[]) {
   }
 }
 
-// Middleware para verificar permisos de escritura (solo admin y operador)
+// Middleware para verificar permisos de escritura (solo admin y soporte)
 export function permisoEscritura(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ success: false, error: 'No autenticado' })
   }
   
-  if (req.user.rol === 'soporte') {
+  // Solo admin y soporte pueden crear/modificar eventos
+  if (req.user.rol !== 'administrador' && req.user.rol !== 'soporte') {
     return res.status(403).json({ 
       success: false, 
-      error: 'Soporte solo tiene permisos de lectura'
+      error: 'No tienes permisos para modificar datos. Solo administradores y soporte pueden crear eventos.'
     })
   }
   
@@ -115,5 +116,6 @@ export function filtrarPedidosPorOperador(req: AuthRequest, res: Response, next:
 }
 
 export const soloAdmin = requiereRol('administrador')
+export const adminOSoporte = requiereRol('administrador', 'soporte')
 export const adminOOperador = requiereRol('administrador', 'operador', 'hogares')
 export const todosLosRoles = requiereRol('administrador', 'operador', 'soporte', 'hogares')

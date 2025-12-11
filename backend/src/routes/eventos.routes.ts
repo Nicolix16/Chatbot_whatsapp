@@ -2,7 +2,7 @@ import { Router, Response } from 'express'
 import multer from 'multer'
 import Evento from '../models/Evento.js'
 import Cliente from '../models/Cliente.js'
-import { verificarToken, adminOOperador, permisoEscritura, AuthRequest } from '../middleware/auth.js'
+import { verificarToken, todosLosRoles, permisoEscritura, AuthRequest } from '../middleware/auth.js'
 import { config } from '../config/environment.js'
 
 const router = Router()
@@ -22,8 +22,8 @@ const upload = multer({
   }
 })
 
-// Obtener todos los eventos (admin y operador)
-router.get('/', verificarToken, adminOOperador, async (req: AuthRequest, res: Response) => {
+// Obtener todos los eventos (todos los roles pueden ver)
+router.get('/', verificarToken, todosLosRoles, async (req: AuthRequest, res: Response) => {
   try {
     const eventos = await Evento.find()
       .sort({ fechaCreacion: -1 })
@@ -42,8 +42,8 @@ router.get('/', verificarToken, adminOOperador, async (req: AuthRequest, res: Re
   }
 })
 
-// Obtener un evento por ID (admin y operador)
-router.get('/:id', verificarToken, adminOOperador, async (req: AuthRequest, res: Response) => {
+// Obtener un evento por ID (todos los roles pueden ver)
+router.get('/:id', verificarToken, todosLosRoles, async (req: AuthRequest, res: Response) => {
   try {
     const evento = await Evento.findById(req.params.id)
     

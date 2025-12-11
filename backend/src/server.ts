@@ -1084,22 +1084,18 @@ app.get('/api/clientes', verificarToken, async (req: AuthRequest, res) => {
   try {
     let filtro: any = {}
     
-    // Soporte no debería ver clientes
-    if (req.user!.rol === 'soporte') {
-      return res.json({ success: true, total: 0, data: [] })
+    // Admin y soporte ven todos los clientes (sin filtro)
+    if (req.user!.rol === 'administrador' || req.user!.rol === 'soporte') {
+      filtro = {}
     }
-    
     // Rol hogares solo ve clientes tipo 'hogar'
-    if (req.user!.rol === 'hogares') {
+    else if (req.user!.rol === 'hogares') {
       filtro = { tipoCliente: 'hogar' }
     }
-    
     // Si es operador, filtrar por su tipo de responsabilidad
     else if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
       filtro = { responsable: req.user!.tipoOperador }
     }
-    
-    // Administrador ve todos los clientes (filtro vacío)
     
     const clientes = await Cliente.find(filtro).sort({ fechaRegistro: -1 })
     
@@ -1349,13 +1345,17 @@ app.patch('/api/pedidos/:id/estado', verificarToken, permisoEscritura, async (re
   }
 })
 
-// 💬 Obtener todas las conversaciones (solo admin y operador)
-app.get('/api/conversaciones', verificarToken, adminOOperador, async (req: AuthRequest, res) => {
+// 💬 Obtener todas las conversaciones
+app.get('/api/conversaciones', verificarToken, async (req: AuthRequest, res) => {
   try {
     let filtroConversaciones: any = {}
     
+    // Admin y soporte ven todas las conversaciones sin filtro
+    if (req.user!.rol === 'administrador' || req.user!.rol === 'soporte') {
+      filtroConversaciones = {}
+    }
     // Si es operador, filtrar solo conversaciones de clientes asignados
-    if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
+    else if (req.user!.rol === 'operador' && req.user!.tipoOperador) {
       const clientesAsignados = await Cliente.find(
         { responsable: req.user!.tipoOperador },
         { telefono: 1 }
@@ -1421,7 +1421,7 @@ app.get('/api/conversaciones', verificarToken, adminOOperador, async (req: AuthR
 })
 
 // 💬 Obtener detalle de una conversación específica
-app.get('/api/conversaciones/:telefono', verificarToken, adminOOperador, async (req: AuthRequest, res) => {
+app.get('/api/conversaciones/:telefono', verificarToken, async (req: AuthRequest, res) => {
   try {
     const conversacion = await Conversacion.findOne({ telefono: req.params.telefono })
     if (!conversacion) {
@@ -1519,8 +1519,8 @@ app.get('/api/stats', verificarToken, async (req: AuthRequest, res) => {
 
 // ==================== RUTAS DE EVENTOS ====================
 
-// Obtener todos los eventos (admin y soporte)
-app.get('/api/eventos', verificarToken, adminOOperador, async (req: AuthRequest, res) => {
+// Obtener todos los eventos (todos los roles pueden ver)
+app.get('/api/eventos', verificarToken, async (req: AuthRequest, res) => {
   try {
     const eventos = await Evento.find()
       .sort({ fechaCreacion: -1 })
@@ -1539,8 +1539,8 @@ app.get('/api/eventos', verificarToken, adminOOperador, async (req: AuthRequest,
   }
 })
 
-// Obtener un evento por ID (admin y soporte)
-app.get('/api/eventos/:id', verificarToken, adminOOperador, async (req: AuthRequest, res) => {
+// Obtener un evento por ID (todos los roles pueden ver)
+app.get('/api/eventos/:id', verificarToken, async (req: AuthRequest, res) => {
   try {
     const evento = await Evento.findById(req.params.id)
     
