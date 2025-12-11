@@ -572,9 +572,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await user.save()
     console.log('✅ Token guardado en la base de datos')
 
-    // Construir URL de reseteo
-    const baseUrl = process.env.APP_URL || `http://localhost:${PORT}`
-    const resetUrl = `${baseUrl}/reset-password.html?token=${resetToken}`
+    // Construir URL de reseteo - usar FRONTEND_URL en producción
+    const frontendUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:5173'
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`
     
     console.log('🔐 Token de recuperación generado exitosamente')
     console.log('🔗 URL de reseteo:', resetUrl)
@@ -599,77 +599,100 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                @media only screen and (max-width: 600px) {
+                  .container { width: 100% !important; }
+                  .content { padding: 30px 20px !important; }
+                  .header { padding: 30px 20px !important; }
+                  .button { padding: 12px 30px !important; font-size: 14px !important; }
+                }
+              </style>
             </head>
-            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
                 <tr>
                   <td align="center">
-                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <table class="container" width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); max-width: 600px;">
                       
-                      <!-- Header con gradiente -->
+                      <!-- Header con gradiente y logo -->
                       <tr>
-                        <td style="background: linear-gradient(135deg, #D1132A 0%, #F2A904 100%); padding: 40px 30px; text-align: center;">
-                          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Avellano</h1>
-                          <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Alimentar es amar</p>
+                        <td class="header" style="background: linear-gradient(135deg, #D1132A 0%, #E8531F 35%, #F2711C 60%, #F2A904 100%); padding: 50px 40px; text-align: center; position: relative;">
+                          <div style="background: white; display: inline-block; padding: 20px 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-bottom: 20px;">
+                            <h1 style="color: #D1132A; margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.5px;">Avellano</h1>
+                            <p style="color: #666; margin: 8px 0 0 0; font-size: 13px; font-weight: 500; letter-spacing: 0.5px;">ALIMENTAR ES AMAR</p>
+                          </div>
+                          <div style="display: inline-block; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3);">
+                            <p style="color: white; margin: 0; font-size: 16px; font-weight: 600;">🔒 Recuperación de Contraseña</p>
+                          </div>
                         </td>
                       </tr>
                       
                       <!-- Contenido -->
                       <tr>
-                        <td style="padding: 40px 30px;">
-                          <h2 style="color: #333; margin: 0 0 20px 0; font-size: 24px;">Recuperación de Contraseña</h2>
-                          
-                          <p style="color: #666; line-height: 1.6; margin: 0 0 20px 0;">
-                            Hola <strong>${user.nombre || user.email}</strong>,
+                        <td class="content" style="padding: 50px 40px;">
+                          <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 10px 0;">
+                            Hola <strong style="color: #D1132A;">${user.nombre || user.email.split('@')[0]}</strong>,
                           </p>
                           
-                          <p style="color: #666; line-height: 1.6; margin: 0 0 20px 0;">
-                            Recibimos una solicitud para restablecer la contraseña de tu cuenta en el Panel de Administración de Avellano.
+                          <p style="color: #666; font-size: 15px; line-height: 1.7; margin: 0 0 25px 0;">
+                            Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong>Avellano</strong>.
                           </p>
                           
-                          <p style="color: #666; line-height: 1.6; margin: 0 0 30px 0;">
+                          <p style="color: #666; font-size: 15px; line-height: 1.7; margin: 0 0 35px 0;">
                             Haz clic en el siguiente botón para crear una nueva contraseña:
                           </p>
                           
-                          <!-- Botón -->
+                          <!-- Botón principal -->
                           <table width="100%" cellpadding="0" cellspacing="0">
                             <tr>
-                              <td align="center" style="padding: 20px 0;">
-                                <a href="${resetUrl}" style="background: linear-gradient(135deg, #D1132A 0%, #F2A904 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(209, 19, 42, 0.3);">
-                                  Restablecer Contraseña
+                              <td align="center" style="padding: 10px 0 35px 0;">
+                                <a href="${resetUrl}" class="button" style="background: linear-gradient(135deg, #D1132A 0%, #F2A904 100%); color: #ffffff; text-decoration: none; padding: 16px 45px; border-radius: 10px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 6px 20px rgba(209, 19, 42, 0.35); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
+                                  RESTABLECER CONTRASEÑA
                                 </a>
                               </td>
                             </tr>
                           </table>
                           
-                          <p style="color: #999; font-size: 13px; line-height: 1.6; margin: 20px 0 0 0; padding: 20px 0 0 0; border-top: 1px solid #eee;">
-                            Si no puedes hacer clic en el botón, copia y pega este enlace en tu navegador:
-                          </p>
-                          
-                          <p style="color: #D1132A; font-size: 12px; word-break: break-all; margin: 10px 0 20px 0;">
-                            ${resetUrl}
-                          </p>
-                          
-                          <div style="background-color: #fff9e6; border-left: 4px solid #F2A904; padding: 15px; margin: 20px 0;">
-                            <p style="color: #856404; margin: 0; font-size: 13px; line-height: 1.6;">
-                              <strong>⏰ Importante:</strong> Este enlace expirará en <strong>1 hora</strong> por motivos de seguridad.
+                          <!-- Enlace alternativo -->
+                          <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 0 0 30px 0; border-left: 4px solid #D1132A;">
+                            <p style="color: #666; font-size: 13px; line-height: 1.6; margin: 0 0 10px 0; font-weight: 600;">
+                              O copia y pega este enlace en tu navegador:
+                            </p>
+                            <p style="color: #D1132A; font-size: 12px; word-break: break-all; margin: 0; font-family: 'Courier New', monospace; background: white; padding: 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                              ${resetUrl}
                             </p>
                           </div>
                           
-                          <p style="color: #666; font-size: 13px; line-height: 1.6; margin: 20px 0 0 0;">
-                            Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña permanecerá sin cambios.
+                          <!-- Advertencia de seguridad -->
+                          <div style="background: linear-gradient(135deg, #fff9e6 0%, #ffedd5 100%); border-left: 4px solid #F2A904; border-radius: 8px; padding: 20px; margin: 0 0 25px 0;">
+                            <p style="color: #856404; margin: 0 0 12px 0; font-size: 14px; font-weight: 700;">
+                              ⚠️ Importante:
+                            </p>
+                            <p style="color: #856404; margin: 0 0 8px 0; font-size: 13px; line-height: 1.6;">
+                              • Este enlace expirará en <strong>1 hora</strong> por motivos de seguridad
+                            </p>
+                            <p style="color: #856404; margin: 0; font-size: 13px; line-height: 1.6;">
+                              • Si no solicitaste este cambio, puedes ignorar este mensaje y tu contraseña permanecerá igual
+                            </p>
+                          </div>
+                          
+                          <p style="color: #999; font-size: 13px; line-height: 1.6; margin: 0; padding: 20px 0 0 0; border-top: 1px solid #eee;">
+                            Si tienes alguna pregunta o problema, contacta a nuestro equipo de soporte.
                           </p>
                         </td>
                       </tr>
                       
                       <!-- Footer -->
                       <tr>
-                        <td style="background-color: #f8f8f8; padding: 30px; text-align: center; border-top: 1px solid #eee;">
-                          <p style="color: #999; font-size: 12px; margin: 0 0 10px 0;">
+                        <td style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); padding: 35px 40px; text-align: center; border-top: 1px solid #e0e0e0;">
+                          <p style="color: #666; font-size: 13px; font-weight: 600; margin: 0 0 8px 0;">
                             © ${new Date().getFullYear()} Avellano - Todos los derechos reservados
                           </p>
                           <p style="color: #999; font-size: 12px; margin: 0;">
                             Este es un correo automático, por favor no responder.
+                          </p>
+                          <p style="color: #999; font-size: 11px; margin: 15px 0 0 0; font-style: italic;">
+                            Alimentar es amar 🌾
                           </p>
                         </td>
                       </tr>
@@ -682,21 +705,36 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             </html>
           `,
           text: `
-Recuperación de Contraseña - Avellano
+╔════════════════════════════════════════════════════════════╗
+║                         AVELLANO                           ║
+║                   Alimentar es amar                        ║
+╚════════════════════════════════════════════════════════════╝
 
-Hola ${user.nombre || user.email},
+🔒 RECUPERACIÓN DE CONTRASEÑA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Recibimos una solicitud para restablecer la contraseña de tu cuenta.
+Hola ${user.nombre || user.email.split('@')[0]},
+
+Recibimos una solicitud para restablecer la contraseña de tu cuenta en Avellano.
 
 Para crear una nueva contraseña, visita el siguiente enlace:
+
 ${resetUrl}
 
-Este enlace expirará en 1 hora por motivos de seguridad.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  IMPORTANTE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Si no solicitaste este cambio, puedes ignorar este correo.
+• Este enlace expirará en 1 HORA por motivos de seguridad
+• Si no solicitaste este cambio, puedes ignorar este correo
+• Tu contraseña permanecerá sin cambios hasta que crees una nueva
 
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 © ${new Date().getFullYear()} Avellano - Todos los derechos reservados
+Este es un correo automático, por favor no responder.
+
+Alimentar es amar 🌾
           `.trim()
         }
 
