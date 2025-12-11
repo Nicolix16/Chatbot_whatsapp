@@ -10,12 +10,14 @@ export function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'activos' | 'administradores'>('todos');
   const [showModal, setShowModal] = useState(false);
+  const [modoCreacion, setModoCreacion] = useState<'individual' | 'csv'>('individual');
+  const [archivoCSV, setArchivoCSV] = useState<File | null>(null);
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: '',
     email: '',
     password: '',
     rol: 'operador' as UserRole,
-    tipoOperador: undefined as TipoOperador | undefined
+    tipoOperador: 'mayorista' as TipoOperador | undefined
   });
 
   useEffect(() => {
@@ -25,6 +27,19 @@ export function Usuarios() {
     const interval = setInterval(loadUsuarios, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const cerrarModal = () => {
+    setShowModal(false);
+    setModoCreacion('individual');
+    setArchivoCSV(null);
+    setNuevoUsuario({
+      nombre: '',
+      email: '',
+      password: '',
+      rol: 'operador',
+      tipoOperador: 'mayorista'
+    });
+  };
 
   const loadUsuarios = async () => {
     try {
@@ -133,14 +148,7 @@ export function Usuarios() {
     try {
       await usuariosService.create(nuevoUsuario);
       alert('Usuario creado exitosamente');
-      setShowModal(false);
-      setNuevoUsuario({
-        nombre: '',
-        email: '',
-        password: '',
-        rol: 'operador',
-        tipoOperador: undefined
-      });
+      cerrarModal();
       loadUsuarios();
     } catch (error: any) {
       console.error('Error creando usuario:', error);
@@ -154,6 +162,81 @@ export function Usuarios() {
       rol,
       tipoOperador: rol === 'operador' ? 'mayorista' : undefined
     });
+  };
+
+  const procesarCSV = async () => {
+    if (!archivoCSV) {
+      alert('Por favor selecciona un archivo CSV');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        // Validar header
+        const header = lines[0].toLowerCase();
+        if (!header.includes('nombre') || !header.includes('email') || !header.includes('password') || !header.includes('rol')) {
+          alert('El archivo CSV debe contener las columnas: nombre, email, password, rol');
+          return;
+        }
+
+        // Procesar líneas
+        const usuarios = [];
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map(v => v.trim());
+          if (values.length >= 4) {
+            const usuario: any = {
+              nombre: values[0],
+              email: values[1],
+              password: values[2],
+              rol: values[3]
+            };
+            
+            // Si es operador y hay tipoOperador
+            if (values[3] === 'operador' && values[4]) {
+              usuario.tipoOperador = values[4];
+            }
+            
+            usuarios.push(usuario);
+          }
+        }
+
+        if (usuarios.length === 0) {
+          alert('No se encontraron usuarios válidos en el archivo');
+          return;
+        }
+
+        // Importar usuarios
+        const resultado = await usuariosService.importarCSV(usuarios);
+        alert(`Importación completada:\n${resultado.creados} usuarios creados\n${resultado.errores} errores`);
+        
+        if (resultado.detalles && resultado.detalles.length > 0) {
+          console.log('Detalles de errores:', resultado.detalles);
+        }
+
+        cerrarModal();
+        loadUsuarios();
+      } catch (error: any) {
+        console.error('Error procesando CSV:', error);
+        alert(`Error: ${error.response?.data?.error || error.message || 'Error al procesar el archivo'}`);
+      }
+    };
+
+    reader.readAsText(archivoCSV);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith('.csv')) {
+        alert('Por favor selecciona un archivo CSV válido');
+        return;
+      }
+      setArchivoCSV(file);
+    }
   };
 
   let usuariosFiltrados = usuarios;
@@ -334,91 +417,191 @@ export function Usuarios() {
 
       {/* Modal de creación */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-content modal-usuarios" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '8px'}}>
-                  <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Agregar Nuevo Usuario
-              </h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
+              <h3>Agregar Nuevos Usuarios</h3>
+              <button className="close-btn" onClick={cerrarModal}>×</button>
             </div>
 
-            <form onSubmit={crearUsuario} className="usuario-form">
-              <div className="form-group">
-                <label>Nombre Completo *</label>
-                <input
-                  type="text"
-                  value={nuevoUsuario.nombre}
-                  onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
-                  placeholder="Ej: Juan Pérez"
-                  required
-                />
-              </div>
+            {/* Tabs de selección */}
+            <div className="tabs-container">
+              <button 
+                className={`tab-button ${modoCreacion === 'individual' ? 'active' : ''}`}
+                onClick={() => setModoCreacion('individual')}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Individual
+              </button>
+              <button 
+                className={`tab-button ${modoCreacion === 'csv' ? 'active' : ''}`}
+                onClick={() => setModoCreacion('csv')}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Importar CSV
+              </button>
+            </div>
 
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  value={nuevoUsuario.email}
-                  onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
-                  placeholder="usuario@avellano.com"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Contraseña *</label>
-                <input
-                  type="password"
-                  value={nuevoUsuario.password}
-                  onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })}
-                  placeholder="Mínimo 6 caracteres"
-                  minLength={6}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Rol *</label>
-                <select
-                  value={nuevoUsuario.rol}
-                  onChange={(e) => handleRolChange(e.target.value as UserRole)}
-                  required
-                >
-                  <option value="operador">Operador</option>
-                  <option value="administrador">Administrador</option>
-                  <option value="soporte">Soporte</option>
-                </select>
-              </div>
-
-              {nuevoUsuario.rol === 'operador' && (
+            {/* Formulario individual */}
+            {modoCreacion === 'individual' && (
+              <form onSubmit={crearUsuario} className="usuario-form">
                 <div className="form-group">
-                  <label>Tipo de Operador *</label>
+                  <label>Nombre Completo *</label>
+                  <input
+                    type="text"
+                    value={nuevoUsuario.nombre}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
+                    placeholder="Ej: Juan Pérez"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={nuevoUsuario.email}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+                    placeholder="usuario@avellano.com"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Contraseña *</label>
+                  <input
+                    type="password"
+                    value={nuevoUsuario.password}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Rol *</label>
                   <select
-                    value={nuevoUsuario.tipoOperador || ''}
-                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, tipoOperador: e.target.value as TipoOperador })}
+                    value={nuevoUsuario.rol}
+                    onChange={(e) => handleRolChange(e.target.value as UserRole)}
                     required
                   >
-                    <option value="mayorista">Mayorista</option>
-                    <option value="director_comercial">Director Comercial</option>
-                    <option value="coordinador_masivos">Coordinador de Masivos</option>
-                    <option value="ejecutivo_horecas">Ejecutivo Horecas</option>
+                    <option value="">Selecciona un rol...</option>
+                    <option value="operador">Operador</option>
+                    <option value="administrador">Administrador</option>
+                    <option value="soporte">Soporte</option>
                   </select>
                 </div>
-              )}
 
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary">
-                  Crear Usuario
-                </button>
+                {nuevoUsuario.rol === 'operador' && (
+                  <div className="form-group">
+                    <label>Tipo de Operador *</label>
+                    <select
+                      value={nuevoUsuario.tipoOperador || ''}
+                      onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, tipoOperador: e.target.value as TipoOperador })}
+                      required
+                    >
+                      <option value="">Selecciona un tipo...</option>
+                      <option value="mayorista">Mayorista</option>
+                      <option value="director_comercial">Director Comercial</option>
+                      <option value="coordinador_masivos">Coordinador de Masivos</option>
+                      <option value="ejecutivo_horecas">Ejecutivo Horecas</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="form-actions">
+                  <button type="button" className="btn-secondary" onClick={cerrarModal}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    Crear Usuario
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Importación CSV */}
+            {modoCreacion === 'csv' && (
+              <div className="csv-import-section">
+                <div className="csv-info">
+                  <div className="info-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <strong>Formato del archivo CSV</strong>
+                  </div>
+                  <p>El archivo debe contener las siguientes columnas en este orden:</p>
+                  <div className="csv-format">
+                    <code>nombre,email,password,rol</code>
+                  </div>
+                  
+                  <div className="roles-info">
+                    <strong>Roles válidos:</strong>
+                    <ul>
+                      <li><strong>administrador</strong></li>
+                      <li><strong>mayorista</strong></li>
+                      <li><strong>director_comercial</strong></li>
+                      <li><strong>coordinador_masivos</strong></li>
+                      <li><strong>ejecutivo_horecas</strong></li>
+                      <li><strong>soporte</strong></li>
+                    </ul>
+                  </div>
+
+                  <div className="csv-example">
+                    <strong>Ejemplo:</strong>
+                    <pre>
+{`nombre,email,password,rol
+Juan Pérez,juanperez@avellano.com,password123,mayorista
+María López,marialopez@avellano.com,password123,soporte`}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="file-upload-section">
+                  <label className="file-upload-label">
+                    Seleccionar archivo CSV *
+                  </label>
+                  <div className="file-input-wrapper">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileChange}
+                      id="csv-file"
+                      className="file-input"
+                    />
+                    <label htmlFor="csv-file" className="file-input-button">
+                      Seleccionar archivo
+                    </label>
+                    {archivoCSV && (
+                      <span className="file-name">{archivoCSV.name}</span>
+                    )}
+                  </div>
+                  {!archivoCSV && <p className="file-hint">Sin archivos seleccionados</p>}
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" className="btn-secondary" onClick={cerrarModal}>
+                    Cancelar
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn-primary" 
+                    onClick={procesarCSV}
+                    disabled={!archivoCSV}
+                  >
+                    Importar Usuarios
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

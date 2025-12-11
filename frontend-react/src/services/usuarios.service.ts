@@ -41,6 +41,11 @@ class UsuariosService {
     const response = await apiService.patch<ApiResponse<Usuario>>(`/usuarios/${id}/rol`, { rol, tipoOperador });
     return response.data;
   }
+
+  async importarCSV(usuarios: Partial<Usuario>[]): Promise<{ creados: number; errores: number; detalles: any[] }> {
+    const response = await apiService.post<ApiResponse<{ creados: number; errores: number; detalles: any[] }>>('/usuarios/bulk', { usuarios });
+    return response.data;
+  }
 }
 
 export const usuariosService = new UsuariosService();

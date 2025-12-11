@@ -1,5 +1,6 @@
 nombre,email,password,rol
-Juan Pérez,juan.perez@avellano.com,password123,mayorista
-María García,maria.garcia@avellano.com,password456,soporte
-Carlos López,carlos.lopez@avellano.com,password789,director_comercial
-Ana Martínez,ana.martinez@avellano.com,password321,coordinador_masivos
+Juan Pérez,juanperez@avellano.com,password123,mayorista
+María López,marialopez@avellano.com,password123,soporte
+Carlos González,carlosgonzalez@avellano.com,password123,director_comercial
+Ana Martínez,anamartinez@avellano.com,password123,coordinador_masivos
+Pedro Sánchez,pedrosanchez@avellano.com,password123,ejecutivo_horecas
