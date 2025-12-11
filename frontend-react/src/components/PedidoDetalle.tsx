@@ -97,9 +97,18 @@ En breve me pondré en contacto contigo para confirmar los detalles y coordinar 
       
       // Enviar mensaje de WhatsApp
       try {
+        const mensajeWhatsApp = `🔔 *ACTUALIZACIÓN DE PEDIDO*
+
+📋 *Pedido:* ${pedido.idPedido}
+✅ *Estado:* EN PROCESO
+
+Su pedido ya está siendo atendido por un asesor comercial. En breve se comunicará con usted para confirmar el pedido y coordinar la entrega.
+
+¡Gracias por su preferencia! 🐔`;
+
         await pedidosService.enviarMensajeWhatsApp(
           pedido.telefono,
-          'Su pedido ya está siendo atendido por un asesor comercial. En breve se comunicará con usted para confirmar el pedido y realizar el pago del mismo. ¡Gracias por su preferencia!'
+          mensajeWhatsApp
         );
         alert('Pedido tomado exitosamente y cliente notificado por WhatsApp');
       } catch (whatsappError) {
@@ -124,6 +133,26 @@ En breve me pondré en contacto contigo para confirmar los detalles y coordinar 
 
     try {
       await pedidosService.completarPedido(pedido._id);
+      
+      // Enviar mensaje de WhatsApp
+      try {
+        const mensajeWhatsApp = `🎉 *PEDIDO COMPLETADO*
+
+📋 *Pedido:* ${pedido.idPedido}
+✅ *Estado:* ATENDIDO
+
+Su pedido ha sido atendido exitosamente. ¡Esperamos que disfrute de nuestros productos!
+
+Gracias por confiar en nosotros. ¡Hasta pronto! 🐔`;
+
+        await pedidosService.enviarMensajeWhatsApp(
+          pedido.telefono,
+          mensajeWhatsApp
+        );
+      } catch (whatsappError) {
+        console.error('Error enviando WhatsApp:', whatsappError);
+      }
+      
       alert('Pedido marcado como atendido');
       onUpdate();
       onClose();
@@ -141,6 +170,28 @@ En breve me pondré en contacto contigo para confirmar los detalles y coordinar 
 
     try {
       await pedidosService.cancelarPedido(pedido._id, motivo);
+      
+      // Enviar mensaje de WhatsApp
+      try {
+        const mensajeWhatsApp = `❌ *PEDIDO CANCELADO*
+
+📋 *Pedido:* ${pedido.idPedido}
+🚫 *Estado:* CANCELADO
+
+Lamentamos informarle que su pedido ha sido cancelado.
+
+*Motivo:* ${motivo}
+
+Si desea realizar un nuevo pedido, no dude en contactarnos. ¡Estamos para servirle! 🐔`;
+
+        await pedidosService.enviarMensajeWhatsApp(
+          pedido.telefono,
+          mensajeWhatsApp
+        );
+      } catch (whatsappError) {
+        console.error('Error enviando WhatsApp:', whatsappError);
+      }
+      
       alert('Pedido cancelado');
       onUpdate();
       onClose();
