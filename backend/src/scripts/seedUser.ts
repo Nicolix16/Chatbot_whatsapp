@@ -33,7 +33,7 @@ async function main() {
 
   // Validar tipoOperador si el rol es operador
   if (rol === 'operador' && tipoOperador) {
-    const tiposValidos: TipoOperador[] = ['coordinador_masivos', 'director_comercial', 'ejecutivo_horecas', 'mayorista', 'encargado_hogares']
+    const tiposValidos: TipoOperador[] = ['coordinador_masivos', 'director_comercial', 'ejecutivo_horecas', 'mayorista']
     if (!tiposValidos.includes(tipoOperador)) {
       console.error(`❌ Tipo de operador inválido. Debe ser: ${tiposValidos.join(', ')}`)
       process.exit(1)

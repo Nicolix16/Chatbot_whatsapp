@@ -3,6 +3,7 @@ import type { Pedido } from '../types';
 import { pedidosService } from '../services/pedidos.service';
 import { useAuth } from '../contexts/AuthContext';
 import './PedidoDetalle.css';
+import type { ReactElement } from 'react';
 
 interface PedidoDetalleProps {
   pedidoId: string;
@@ -17,7 +18,7 @@ const TIPO_OPERADOR_TEXTO: Record<string, string> = {
   'mayorista': 'Asesor de Mayoristas'
 };
 
-const ESTADO_MAP: Record<string, { iconSvg: JSX.Element; color: string; label: string }> = {
+const ESTADO_MAP: Record<string, { iconSvg: ReactElement; color: string; label: string }> = {
   'pendiente': { 
     iconSvg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
     color: '#f59e0b', 
